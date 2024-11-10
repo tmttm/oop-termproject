@@ -1,21 +1,17 @@
 #include <iostream>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
-#include <string>
-
 using namespace std;
 
 class Account {
 private:
     string userName;
     string accountNumber;
+    string password;
     double availableFunds;
     vector<string> transactionHistory;
 
 public:
-    Account(string name, string number, double initialFunds) 
-        : userName(name), accountNumber(number), availableFunds(initialFunds) {}
+    Account(string name, string number, string pw, double initialFunds) 
+        : userName(name), accountNumber(number), password(pw), availableFunds(initialFunds) {}
 
     double getBalance() {
         return availableFunds;
@@ -45,6 +41,7 @@ public:
     }
 };
 
+
 class Bank {
 private:
     string name;
@@ -54,12 +51,18 @@ private:
 public:
     Bank(string bankName) : name(bankName) {}
 
-    void createAccount(string userName, string accountNumber, double initialFunds) {
-        accounts[accountNumber] = Account(userName, accountNumber, initialFunds);
+    void createAccount(string userName, string accountNumber, string pw, double initialFunds) {
+        accounts[accountNumber] = Account(userName, accountNumber, pw, initialFunds);
     }
 
     bool verifyPassword(string cardNumber, string password) {
-        return true;
+        if (accounts.find(cardNumber) != accounts.end() && accounts[cardNumber].password == password) {
+            cout << "Password verified." << endl;
+            return true;
+        } else {
+            cout << "Password verification failed." << endl;
+            return false;
+        }
     }
 
     void depositToAccount(string accountNumber, double amount) {
@@ -101,30 +104,15 @@ private:
     string type;
     bool bilingualSupport;
     unordered_map<int, int> cashInventory;
-    unordered_map<string, int> transactionFees;
+    double transactionFees;
     bool sessionActive;
-    string primaryBank;
-    static unordered_set<string> usedSerialNumbers;
 
 public:
-    ATM(string serial, string atmType, bool bilingual, string bankName) 
-        : serialNumber(serial), type(atmType), bilingualSupport(bilingual), primaryBank(bankName), sessionActive(false) {
-        if (usedSerialNumbers.count(serial)) {
-            throw invalid_argument("Serial number already in use.");
-        }
-        usedSerialNumbers.insert(serial);
-        initializeTransactionFees();
-    }
+    ATM(string serial, string atmType, bool bilingual) 
+        : serialNumber(serial), type(atmType), bilingualSupport(bilingual), sessionActive(false) {}
 
-    void initializeTransactionFees() {
-        transactionFees["deposit_non_primary"] = 2000;
-        transactionFees["deposit_primary"] = 1000;
-        transactionFees["withdrawal_primary"] = 1000;
-        transactionFees["withdrawal_non_primary"] = 2000;
-        transactionFees["transfer_primary_to_primary"] = 2000;
-        transactionFees["transfer_primary_to_non_primary"] = 3000;
-        transactionFees["transfer_non_primary_to_non_primary"] = 4000;
-        transactionFees["cash_transfer"] = 1000;
+    void initializeATM() {
+        cout << "ATM initialized with serial number: " << serialNumber << endl;
     }
 
     void setLanguage() {
@@ -145,50 +133,27 @@ public:
         cout << "Session ended." << endl;
     }
 
-    void authorizeUser(string cardNumber, string bankName) {
-        if (type == "Single Bank ATM" && bankName != primaryBank) {
-            cout << "Invalid Card: This ATM only accepts cards from " << primaryBank << "." << endl;
-            return;
-        }
-        cout << "User authorized." << endl;
-    }
-
-    int getTransactionFee(const string& transactionType) {
-        if (transactionFees.find(transactionType) != transactionFees.end()) {
-            return transactionFees[transactionType];
-        }
-        cout << "Invalid transaction type" << endl;
-        return 0;
-    }
-
-    void processDeposit(bool isPrimaryBank) {
-        string feeType = isPrimaryBank ? "deposit_primary" : "deposit_non_primary";
-        int fee = getTransactionFee(feeType);
-        cout << "Deposit fee: " << fee << " KRW" << endl;
-    }
-
-    void processWithdrawal(bool isPrimaryBank) {
-        string feeType = isPrimaryBank ? "withdrawal_primary" : "withdrawal_non_primary";
-        int fee = getTransactionFee(feeType);
-        cout << "Withdrawal fee: " << fee << " KRW" << endl;
-    }
-
-    void processTransfer(bool isPrimaryToPrimary, bool isPrimaryToNonPrimary) {
-        string feeType;
-        if (isPrimaryToPrimary) {
-            feeType = "transfer_primary_to_primary";
-        } else if (isPrimaryToNonPrimary) {
-            feeType = "transfer_primary_to_non_primary";
+    bool authorizeUser(Bank bankName, string cardNumber, string password) {
+        if (bankName->verifyPassword(cardNumber, password)) {
+            cout << "User authorized." << endl;
+            return true;
         } else {
-            feeType = "transfer_non_primary_to_non_primary";
+            cout << "Authorization failed." << endl;
+            return false;
         }
-        int fee = getTransactionFee(feeType);
-        cout << "Transfer fee: " << fee << " KRW" << endl;
     }
 
-    void processCashTransfer() {
-        int fee = getTransactionFee("cash_transfer");
-        cout << "Cash transfer fee: " << fee << " KRW" << endl;
+    void depositCash(int denomination, int count) {
+        cashInventory[denomination] += count;
+        cout << "Deposited " << count << " bills of " << denomination << " won." << endl;
+    }
+
+    void withdrawCash(double amount) {
+        cout << "Withdrew " << amount << " won." << endl;
+    }
+
+    void transferFunds(string sourceAccount, string destinationAccount, double amount) {
+        cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
     }
 
     void displayTransactionHistory() {
@@ -199,5 +164,3 @@ public:
         cout << "Exception: " << exceptionType << endl;
     }
 };
-
-unordered_set<string> ATM::usedSerialNumbers;
