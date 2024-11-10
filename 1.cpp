@@ -87,8 +87,6 @@ public:
         }
     }
 
-    unordered_map<string, Account> accounts;
-    
     void displayAllAccounts() {
         for (const auto& entry : accounts) {
             cout << "Account [Bank: " << name << ", No: " << entry.first 
