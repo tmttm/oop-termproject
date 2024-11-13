@@ -12,28 +12,59 @@ private:
     string password;
     double balance;
     vector<string> transactionHistory;
+    string mainbank;
 
 public:
-    Account() : userName(""), accountNumber(""), password(""), balance(0.0) {}
+    Account() : userName(""), accountNumber(""), password(""), balance(0.0), mainbank("") {}
 
-    Account(string name, string number, string pw, double initialFunds) 
-        : userName(name), accountNumber(number), password(pw), balance(initialFunds) {}
+    Account(string name, string number, string pw, double initialFunds, string bankname) 
+        : userName(name), accountNumber(number), password(pw), balance(initialFunds), mainbank(bankname) {}
 
     // 은행명 필요
-    static Account setupAccount() {
-        string userName, accountNumber, password;
+    static void setupAccount() {
+        string userName, accountNumber, password, bankName;
         double initialBalance;
+
+        cout << "Enter bank name: ";
+        cin >> bankName;
 
         cout << "Enter user name: ";
         cin >> userName;
+
         cout << "Enter 12-digit account number: ";
         cin >> accountNumber;
+
         cout << "Enter password: ";
         cin >> password;
+
         cout << "Enter initial balance: ";
         cin >> initialBalance;
 
-        return Account(userName, accountNumber, password, initialBalance);
+        // 새로운 Account 객체 생성
+        Account newAccount(userName, accountNumber, password, initialBalance, bankName);
+
+        // 입력된 bankName에 맞는 Bank 객체 찾기
+        Bank* targetBank = nullptr;
+        for (auto& bank : banks) {
+            if (bank.getName() == newAccount.getBankName()) {
+                targetBank = &bank;
+                break;
+            }
+        }
+
+        // 일치하는 은행이 없을 경우 새로운 Bank 객체 생성
+        if (!targetBank) {
+            banks.push_back(Bank(newAccount.getBankName()));
+            targetBank = &banks.back();
+        }
+
+        // 계좌를 해당 은행에 추가
+        targetBank->addAccount(newAccount);
+    }
+
+    // 은행 이름 반환 함수
+    string getBankName() const {
+        return bankName;
     }
 
     string getAccountNumber() const {return accountNumber;}
@@ -206,26 +237,7 @@ public:
     //4
     void depositCash(int denomination, int count) {
         if (count > depositLimitCash) {
-            cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
-            return;
-        }
-
-        double totalAmount = denomination * count;
-        int fee = (type == "Single Bank") ? transactionFees["deposit_primary"] : transactionFees["deposit_non_primary"];
-
-        if (myAccount->getBalance() >= fee) {
-            myAccount->addFunds(totalAmount - fee);
-            cashInventory[denomination] += count;
-            cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
-            cout << "Deposit fee of " << fee << " won applied." << endl;
-        } else {
-            cout << "Insufficient funds for deposit fee." << endl;
-        }
-    }
-
-    void depositCheck(double amount) {
-        if (amount < 100000) {
-            cout << "Error: Minimum check amount is 100,000 won." << endl;
+            cout << "Error: Cash deposit limit of " << depositLimitCash << "bills exceeded." << endl;
             return;
         }
 
@@ -328,6 +340,34 @@ public:
         cout << "Withdrawal successful. Fee applied: " << fee << " KRW" << endl;
         cout << "You have " << withdrawalsThisSession << "withdrawal opportunities left in this session." << endl;
     }
+    
+    void transferFunds(){
+        int choice;
+        cout << "Press 1 to transfer cash, 2 to transfer account funds." << endl;
+        cin >> choice;
+        cout << "press destination account number" << endl;
+        string destinationAccount;
+        cin >> destinationAccount;
+        if (choice == 1) {
+            cout << "insert cash and transition fees" << endl;
+            // insert cash and transition fees
+            // 금액 확인 및 전송 확인
+            // 목표 계좌에 돈 입금
+            // ATM 현금 보유량 증가
+        }
+        else if (choice == 2) {
+            cout << "press the source account number" << endl;
+            string sourceAccount;
+            cin >> sourceAccount;
+            cout << "press the amount of fund to transfer" << endl;
+            double amount;
+            cin >> amount;
+            // 금액 확인 및 전송 확인
+            // 소스 계좌에 돈 출금
+            // 목표 계좌에 돈 입금
+        }
+        cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
+    }
 };
 
 int main() {
@@ -335,13 +375,22 @@ int main() {
     myATM.setupATM();
     Bank* myBank = myATM.getBank();
 
+    vector<Bank> banks; // 여러 은행 객체들을 저장할 벡터 선언
+
+    ATM myATM;
+    myATM.setupATM();
+    Bank* myBank = myATM.getBank();
+
+    // myBank를 banks 벡터에 추가
+    banks.push_back(*myBank);
+    
     int numAccounts;
     cout << "\nEnter the number of accounts to create: ";
     cin >> numAccounts;
     for (int i = 0; i < numAccounts; ++i) {
         cout << "\nCreating Account #" << (i + 1) << endl;
-        Account newAccount = Account::setupAccount();
-        myBank->addAccount(newAccount);
+        Account newAccount = Account::setupAccount(banks);
+        //myBank->addAccount(newAccount);
     }
     cout << "Complete to create account!" << endl;
 
