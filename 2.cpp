@@ -21,7 +21,7 @@ public:
 
     // 은행명 필요
     static Account setupAccount() {
-        string userName, accountNumber, password, bankName;
+        string userName, accountNumber, password;
         double initialBalance;
 
         cout << "Enter user name: ";
@@ -127,7 +127,7 @@ private:
     const int depositLimitCheck = 30;
 
 public:
-    ATM() : sessionActive(false), bilingualSupport(false), myAccount(nullptr), myBank(nullptr) {};
+    ATM() : sessionActive(false), bilingualSupport(false), myAccount(nullptr), myBank(nullptr) {}
 
     void setupATM() {
         re_serial:
@@ -206,14 +206,34 @@ public:
     //4
     void depositCash(int denomination, int count) {
         if (count > depositLimitCash) {
-            cout << "Error: Cash deposit limit of " << depositLimitCash << "bills exceeded." << endl;
+            cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
             return;
         }
-        int fee = transactionFees["deposit_primary"];
-        if (currentAccount->getBalance() >= fee) {
-            currentAccount->addFunds(amount - fee);
+
+        double totalAmount = denomination * count;
+        int fee = (type == "Single Bank") ? transactionFees["deposit_primary"] : transactionFees["deposit_non_primary"];
+
+        if (myAccount->getBalance() >= fee) {
+            myAccount->addFunds(totalAmount - fee);
+            cashInventory[denomination] += count;
+            cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
+            cout << "Deposit fee of " << fee << " won applied." << endl;
+        } else {
+            cout << "Insufficient funds for deposit fee." << endl;
+        }
+    }
+
+    void depositCheck(double amount) {
+        if (amount < 100000) {
+            cout << "Error: Minimum check amount is 100,000 won." << endl;
+            return;
+        }
+
+        int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
+        if (myAccount->getBalance() >= fee) {
+            myAccount->addFunds(amount - fee);
             cout << "Deposited check of " << amount << " won to the account." << endl;
-            cout << "Deposit fee of " << fee << " won applied." << endl; 
+            cout << "Deposit fee of " << fee << " won applied." << endl;
         } else {
             cout << "Insufficient funds for check deposit fee." << endl;
         }
@@ -240,6 +260,8 @@ public:
             cout << "Invalid deposit type selected." << endl;
         }
     }    
+
+
 
     void withdraw(double withdrawAmount) {
         static int withdrawalsThisSession = 0;
@@ -305,34 +327,6 @@ public:
 
         cout << "Withdrawal successful. Fee applied: " << fee << " KRW" << endl;
         cout << "You have " << withdrawalsThisSession << "withdrawal opportunities left in this session." << endl;
-    }
-    
-    void transferFunds(){
-        int choice;
-        cout << "Press 1 to transfer cash, 2 to transfer account funds." << endl;
-        cin >> choice;
-        cout << "press destination account number" << endl;
-        string destinationAccount;
-        cin >> destinationAccount;
-        if (choice == 1) {
-            cout << "insert cash and transition fees" << endl;
-            // insert cash and transition fees
-            // 금액 확인 및 전송 확인
-            // 목표 계좌에 돈 입금
-            // ATM 현금 보유량 증가
-        }
-        else if (choice == 2) {
-            cout << "press the source account number" << endl;
-            string sourceAccount;
-            cin >> sourceAccount;
-            cout << "press the amount of fund to transfer" << endl;
-            double amount;
-            cin >> amount;
-            // 금액 확인 및 전송 확인
-            // 소스 계좌에 돈 출금
-            // 목표 계좌에 돈 입금
-        }
-        cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
     }
 };
 
