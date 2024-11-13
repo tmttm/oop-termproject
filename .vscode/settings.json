@@ -4,5 +4,11 @@
         "iosfwd": "cpp",
         "ostream": "cpp",
         "iostream": "cpp"
+    },
+    "files.exclude": {
+        "**/*.rpyc": true,
+        "**/*.rpa": true,
+        "**/*.rpymc": true,
+        "**/cache/": true
     }
 }

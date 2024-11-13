@@ -21,7 +21,7 @@ public:
 
     // 은행명 필요
     static Account setupAccount() {
-        string userName, accountNumber, password;
+        string userName, accountNumber, password, bankName;
         double initialBalance;
 
         cout << "Enter user name: ";
@@ -127,7 +127,7 @@ private:
     const int depositLimitCheck = 30;
 
 public:
-    ATM() : sessionActive(false), bilingualSupport(false), myAccount(nullptr), myBank(nullptr) {}
+    ATM() : sessionActive(false), bilingualSupport(false), myAccount(nullptr), myBank(nullptr) {};
 
     void setupATM() {
         re_serial:
