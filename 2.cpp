@@ -210,8 +210,8 @@ public:
             return;
         }
         int fee = transactionFees["deposit_primary"];
-        if (currentAccount->getBalance() >= fee) {
-            currentAccount->addFunds(amount - fee);
+        if (myAccount->getBalance() >= fee) {
+            myAccount->addFunds(amount - fee);
             cout << "Deposited check of " << amount << " won to the account." << endl;
             cout << "Deposit fee of " << fee << " won applied." << endl; 
         } else {
@@ -372,8 +372,8 @@ int main() {
         cin >> choice;
 
         if (choice == 1) {
-            if (myATM.getAccount()) {
-                cout << "Balance: " << myATM.getAccount()->getBalance() << " won" << endl;
+            if (myATM.getAccount(accountNumber)) {
+                cout << "Balance: " << myATM.getAccount(accountNumber)->getBalance() << " won" << endl;
             } else {
                 cout << "No account selected." << endl;
             }
