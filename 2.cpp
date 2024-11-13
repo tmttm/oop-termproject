@@ -123,6 +123,8 @@ private:
     bool sessionActive;
     Bank* myBank;
     Account* myAccount;
+    const int depositLimitCash = 50;
+    const int depositLimitCheck = 30;
 
 public:
     ATM() : sessionActive(false), bilingualSupport(false), myAccount(nullptr), myBank(nullptr) {}
@@ -200,6 +202,44 @@ public:
             myAccount = nullptr;
         }
     }
+
+    //4
+    void depositCash(int denomination, int count) {
+        if (count > depositLimitCash) {
+            cout << "Error: Cash deposit limit of " << depositLimitCash << "bills exceeded." << endl;
+            return;
+        }
+        int fee = transactionFees["deposit_primary"];
+        if (currentAccount->getBalance() >= fee) {
+            currentAccount->addFunds(amount - fee);
+            cout << "Deposited check of " << amount << " won to the account." << endl;
+            cout << "Deposit fee of " << fee << " won applied." << endl; 
+        } else {
+            cout << "Insufficient funds for check deposit fee." << endl;
+        }
+    }
+
+    void handleDeposit() {
+        int depositType;
+        cout << "Select deposit type (1: Cash, 2: Check): ";
+        cin >> depositType;
+
+        if (depositType == 1) {
+            int denomination, count;
+            cout << "Enter bill denomination (1000, 5000, 10000, 50000): ";
+            cin >> denomination;
+            cout << "Enter number of bills: ";
+            cin >> count;
+            depositCash(denomination, count);
+        } else if (depositType == 2) {
+            double checkAmount;
+            cout << "Enter check amount: ";
+            cin >> checkAmount;
+            depositCheck(checkAmount);
+        } else {
+            cout << "Invalid deposit type selected." << endl;
+        }
+    }    
 
     void withdraw(double withdrawAmount) {
         static int withdrawalsThisSession = 0;
