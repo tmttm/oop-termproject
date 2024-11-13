@@ -314,6 +314,8 @@ public:
         cout << "press destination account number" << endl;
         string destinationAccount;
         cin >> destinationAccount;
+        string sourceAccount;
+        double amount;
         if (choice == 1) {
             cout << "insert cash and transition fees" << endl;
             // insert cash and transition fees
@@ -323,10 +325,8 @@ public:
         }
         else if (choice == 2) {
             cout << "press the source account number" << endl;
-            string sourceAccount;
             cin >> sourceAccount;
             cout << "press the amount of fund to transfer" << endl;
-            double amount;
             cin >> amount;
             // 금액 확인 및 전송 확인
             // 소스 계좌에 돈 출금
