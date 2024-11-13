@@ -1,4 +1,7 @@
 #include <iostream>
+#include <string>
+#include <vector>
+#include <unordered_map>
 using namespace std;
 
 class Account {
@@ -15,6 +18,10 @@ public:
 
     double getBalance() {
         return availableFunds;
+    }
+
+    string getPassword() {
+        return password;
     }
 
     void addFunds(double amount) {
@@ -56,7 +63,7 @@ public:
     }
 
     bool verifyPassword(string cardNumber, string password) {
-        if (accounts.find(cardNumber) != accounts.end() && accounts[cardNumber].password == password) {
+        if (accounts.find(cardNumber) != accounts.end() && accounts[cardNumber].getPassword() == password) {
             cout << "Password verified." << endl;
             return true;
         } else {
@@ -134,7 +141,7 @@ public:
     }
 
     bool authorizeUser(Bank bankName, string cardNumber, string password) {
-        if (bankName->verifyPassword(cardNumber, password)) {
+        if (bankName.verifyPassword(cardNumber, password)) {
             cout << "User authorized." << endl;
             return true;
         } else {
