@@ -306,6 +306,34 @@ public:
         cout << "Withdrawal successful. Fee applied: " << fee << " KRW" << endl;
         cout << "You have " << withdrawalsThisSession << "withdrawal opportunities left in this session." << endl;
     }
+    
+    void transferFunds(){
+        int choice;
+        cout << "Press 1 to transfer cash, 2 to transfer account funds." << endl;
+        cin >> choice;
+        cout << "press destination account number" << endl;
+        string destinationAccount;
+        cin >> destinationAccount;
+        if (choice == 1) {
+            cout << "insert cash and transition fees" << endl;
+            // insert cash and transition fees
+            // 금액 확인 및 전송 확인
+            // 목표 계좌에 돈 입금
+            // ATM 현금 보유량 증가
+        }
+        else if (choice == 2) {
+            cout << "press the source account number" << endl;
+            string sourceAccount;
+            cin >> sourceAccount;
+            cout << "press the amount of fund to transfer" << endl;
+            double amount;
+            cin >> amount;
+            // 금액 확인 및 전송 확인
+            // 소스 계좌에 돈 출금
+            // 목표 계좌에 돈 입금
+        }
+        cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
+    }
 };
 
 int main() {
