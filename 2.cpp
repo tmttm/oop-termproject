@@ -12,28 +12,59 @@ private:
     string password;
     double balance;
     vector<string> transactionHistory;
+    string mainbank;
 
 public:
-    Account() : userName(""), accountNumber(""), password(""), balance(0.0) {}
+    Account() : userName(""), accountNumber(""), password(""), balance(0.0), mainbank("") {}
 
-    Account(string name, string number, string pw, double initialFunds) 
-        : userName(name), accountNumber(number), password(pw), balance(initialFunds) {}
+    Account(string name, string number, string pw, double initialFunds, string bankname) 
+        : userName(name), accountNumber(number), password(pw), balance(initialFunds), mainbank(bankname) {}
 
     // 은행명 필요
-    static Account setupAccount() {
+    static void setupAccount(vector<Bank>& banks) {
         string userName, accountNumber, password, bankName;
         double initialBalance;
 
+        cout << "Enter bank name: ";
+        cin >> bankName;
+
         cout << "Enter user name: ";
         cin >> userName;
+
         cout << "Enter 12-digit account number: ";
         cin >> accountNumber;
+
         cout << "Enter password: ";
         cin >> password;
+
         cout << "Enter initial balance: ";
         cin >> initialBalance;
 
-        return Account(userName, accountNumber, password, initialBalance);
+        // 새로운 Account 객체 생성
+        Account newAccount(userName, accountNumber, password, initialBalance, bankName);
+
+        // 입력된 bankName에 맞는 Bank 객체 찾기
+        Bank* targetBank = nullptr;
+        for (auto& bank : banks) {
+            if (bank.getName() == newAccount.getBankName()) {
+                targetBank = &bank;
+                break;
+            }
+        }
+
+        // 일치하는 은행이 없을 경우 새로운 Bank 객체 생성
+        if (!targetBank) {
+            banks.push_back(Bank(newAccount.getBankName()));
+            targetBank = &banks.back();
+        }
+
+        // 계좌를 해당 은행에 추가
+        targetBank->addAccount(newAccount);
+    }
+
+    // 은행 이름 반환 함수
+    string getBankName() const {
+        return bankName;
     }
 
     string getAccountNumber() const {return accountNumber;}
@@ -211,7 +242,7 @@ public:
         }
 
         double totalAmount = denomination * count;
-        int fee = (type == "Single Bank") ? transactionFees["deposit_primary"] : transactionFees["deposit_non_primary"];
+        int fee = (type == cashInventory[denomination]->getBankName ) ? transactionFees["deposit_primary"] : transactionFees["deposit_non_primary"];
 
         if (myAccount->getBalance() >= fee) {
             myAccount->addFunds(totalAmount - fee);
@@ -361,13 +392,22 @@ int main() {
     myATM.setupATM();
     Bank* myBank = myATM.getBank();
 
+    vector<Bank> banks; // 여러 은행 객체들을 저장할 벡터 선언
+
+    ATM myATM;
+    myATM.setupATM();
+    Bank* myBank = myATM.getBank();
+
+    // myBank를 banks 벡터에 추가
+    banks.push_back(*myBank);
+    
     int numAccounts;
     cout << "\nEnter the number of accounts to create: ";
     cin >> numAccounts;
     for (int i = 0; i < numAccounts; ++i) {
         cout << "\nCreating Account #" << (i + 1) << endl;
-        Account newAccount = Account::setupAccount();
-        myBank->addAccount(newAccount);
+        Account newAccount = Account::setupAccount(banks);
+        //myBank->addAccount(newAccount);
     }
     cout << "Complete to create account!" << endl;
 
