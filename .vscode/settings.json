@@ -3,7 +3,8 @@
     "files.associations": {
         "iosfwd": "cpp",
         "ostream": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "new": "cpp"
     },
     "files.exclude": {
         "**/*.rpyc": true,
