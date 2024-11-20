@@ -385,8 +385,8 @@ void depositCheck(double amount) {
             cout << "1000won bills : ";
             cin >> amount1000;
             amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
-            // transaction fees
-            cout << "you transfered " << amount << "won to " << destinationAccount << endl;
+            amount -= transactionFees["cash_transfer"];
+            cout << "You transfered " << amount << "won to " << destinationAccount << ". Transfer fee 1000won was paid." << endl;
             
             findAccount(destinationAccount, accounts)->addFunds(amount);
             cashInventory[50000] += amount50000;
@@ -400,9 +400,11 @@ void depositCheck(double amount) {
             cout << "input the amount of fund to transfer" << endl;
             cin >> amount;
             cout << "you transfered " << amount << "won from " << myAccount->getAccountNumber() << " to " << destinationAccount << endl;
-            // transfer fees
+            int sourcefee = transactionFees[transferFees(myAccount->getBankName())];
+            int destinationfee = transactionFees[transferFees(findAccount(destinationAccount, accounts)->getBankName())];
+            int fee = sourcefee>destinationfee ? sourcefee : destinationfee;
             findAccount(destinationAccount, accounts)->addFunds(amount);
-            myAccount->deductFunds(amount);
+            myAccount->deductFunds(amount+fee);
         }
         cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
     }
