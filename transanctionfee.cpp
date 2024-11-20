@@ -14,3 +14,4 @@ bool checkPrimaryBank(const std::string& accountNumber, const std::string& prima
         std::cerr << "Account number not found in database!" << std::endl;
         return false;
     }
+}

@@ -91,8 +91,6 @@ public:
     }
 };
 
-
-
 class ATM : public Account {
 private:
     string serialNumber;
@@ -156,31 +154,56 @@ public:
         transactionFees["cash_transfer"] = 1000;
     }
 
-    bool isSessionActive() const {return sessionActive;}
+bool checkPrimaryBank(const std::string& accountNumber, const std::string& primaryBank) {
+    // 1. 계좌 정보 불러오기
+    if (accountDatabase.find(accountNumber) != accountDatabase.end()) {
+        Account account = accountDatabase[accountNumber];
+        std::cout << "Account belongs to bank: " << account.getBankName() << std::endl;
 
-    Bank* getBank() const {return myBank;}
-
-    Account* getAccount() const {return myAccount;}
-
-    void insert_card(const string& accountNumber, const string& password) {
-        if (myBank && myBank->verifyPassword(accountNumber, password)) {
-            sessionActive = true;
-            myAccount = myBank->getAccount(accountNumber);
-            cout << "Session started on ATM with serial number " << serialNumber << endl;
+        // 2. 주거래 은행 확인
+        if (account.getBankName() == primaryBank) {
+            return true;
         } else {
-            cout << "Authentication failed. Please check your account number or password." << endl;
+            return false;
+        }
+    } else {
+        std::cerr << "Account number not found in database!" << std::endl;
+        return false;
+    }
+}
+
+    // deposit 수수료 계산 함수
+    string depositFees() {
+        if (myAccount->getBankName() == myBank->getName()) {
+            return "deposit_primary";
+        } else {
+            return "deposit_non_primary";
         }
     }
 
-    void end_session() {
-        if (sessionActive) {
-            sessionActive = false;
-            cout << "Session ended. Please take your card." << endl;
-            if (myAccount) {
-                myAccount->printTransactionHistory();
-            }
-            myAccount = nullptr;
+    // withdraw 수수료 계산 함수
+    string withdrawFees() {
+        if (myAccount->getBankName() == myBank->getName()) {
+            return "withdrawal_primary";
+        } else {
+            return "withdrawal_non_primary";
         }
+    }
+
+    // trasfer 수수료 계산 함수
+    string transferFees(const string& destinationBankName) {
+        if (myAccount->getBankName() == myBank->getName() && destinationBankName == myBank->getName()) {
+            return "transfer_primary_to_primary";
+        } else if (myAccount->getBankName() == myBank->getName() && destinationBankName != myBank->getName()) {
+            return "transfer_primary_to_non_primary";
+        } else {
+            return "transfer_non_primary_to_non_primary";
+        }
+    }
+
+    // cashTransfer 수수료 계산 함수
+    string cashTransferFees() {
+        return "cash_transfer";
     }
 
     //4
@@ -190,7 +213,7 @@ public:
             return;
         }
 
-        int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
+        int fee = transactionFees[depositFees()]; // 수표는 주 은행 수수료만 적용
         if (myAccount->getBalance() >= fee) {
             myAccount->addFunds(count - fee);
             cout << "Deposited check of " << count << " won to the account." << endl;
@@ -220,7 +243,34 @@ public:
         } else {
             cout << "Invalid deposit type selected." << endl;
         }
-    }    
+    }
+
+    bool isSessionActive() const {return sessionActive;}
+
+    Bank* getBank() const {return myBank;}
+
+    Account* getAccount() const {return myAccount;}
+
+    void insert_card(const string& accountNumber, const string& password) {
+        if (myBank && myBank->verifyPassword(accountNumber, password)) {
+            sessionActive = true;
+            myAccount = myBank->getAccount(accountNumber);
+            cout << "Session started on ATM with serial number " << serialNumber << endl;
+        } else {
+            cout << "Authentication failed. Please check your account number or password." << endl;
+        }
+    }
+
+    void end_session() {
+        if (sessionActive) {
+            sessionActive = false;
+            cout << "Session ended. Please take your card." << endl;
+            if (myAccount) {
+                myAccount->printTransactionHistory();
+            }
+            myAccount = nullptr;
+        }
+    }
 
     void withdraw(double withdrawAmount) {
         static int withdrawalsThisSession = 0;
@@ -291,6 +341,7 @@ public:
     void transferFunds(){
         int choice;
         int amount50000, amount10000, amount5000, amount1000;
+        int amount = 0;
         string sourceAccount;
         cout << "Press 1 to transfer cash, 2 to transfer account funds." << endl;
         cin >> choice;
@@ -307,7 +358,7 @@ public:
             cin >> amount5000;
             cout << "1000won bills : ";
             cin >> amount1000;
-            int amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
+            amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
             // transaction fees
             cout << "you transfered " << amount << "won to " << destinationAccount << endl;
             getAccount(destinationAccount)->addFunds(amount);
