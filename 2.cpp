@@ -21,7 +21,7 @@ public:
         : userName(name), accountNumber(number), password(pw), balance(initialFunds), mainbank(bankname) {}
 
     // 은행명 필요
-    static void setupAccount();
+    static void setupAccount(vector<Bank> banks);
 
     // 은행 이름 반환 함수
     string getBankName() const {
@@ -50,7 +50,7 @@ public:
     bool verifyPassword(const string& pw) const {return password == pw;}
 };
 
-class Bank {
+class Bank : public Account {
 private:
     string name;
     unordered_map<string, Account> accounts;
@@ -361,6 +361,7 @@ bool checkPrimaryBank(const std::string& accountNumber, const std::string& prima
             amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
             // transaction fees
             cout << "you transfered " << amount << "won to " << destinationAccount << endl;
+            
             getAccount(destinationAccount)->addFunds(amount);
             cashInventory[50000] += amount50000;
             cashInventory[10000] += amount10000;
@@ -380,7 +381,7 @@ bool checkPrimaryBank(const std::string& accountNumber, const std::string& prima
     }
 };
 
-void Account::setupAccount(){
+static void Account::setupAccount(vector<Bank> banks) {
     string userName, accountNumber, password, bankName;
     double initialBalance;
 
