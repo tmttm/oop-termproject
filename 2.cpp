@@ -93,7 +93,7 @@ public:
 
 
 
-class ATM {
+class ATM : public Account {
 private:
     string serialNumber;
     string type;
@@ -290,7 +290,7 @@ public:
     
     void transferFunds(){
         int choice;
-        double amount;
+        int amount50000, amount10000, amount5000, amount1000;
         string sourceAccount;
         cout << "Press 1 to transfer cash, 2 to transfer account funds." << endl;
         cin >> choice;
@@ -299,19 +299,31 @@ public:
         cin >> destinationAccount;
         if (choice == 1) {
             cout << "insert cash and transition fees" << endl;
-            // insert cash and transition fees
-            // 금액 확인 및 전송 확인
-            // 목표 계좌에 돈 입금
-            // ATM 현금 보유량 증가
+            cout << "50000won bills : ";
+            cin >> amount50000;
+            cout << "10000won bills : ";
+            cin >> amount10000;
+            cout << "5000won bills : ";
+            cin >> amount5000;
+            cout << "1000won bills : ";
+            cin >> amount1000;
+            int amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
+            // transaction fees
+            cout << "you transfered " << amount << "won to " << destinationAccount << endl;
+            getAccount(destinationAccount)->addFunds(amount);
+            cashInventory[50000] += amount50000;
+            cashInventory[10000] += amount10000;
+            cashInventory[5000] += amount5000;
+            cashInventory[1000] += amount1000;
         }
         else if (choice == 2) {
-            cout << "press the source account number" << endl;
+            cout << "input the source account number" << endl;
             cin >> sourceAccount;
-            cout << "press the amount of fund to transfer" << endl;
+            cout << "input the amount of fund to transfer" << endl;
             cin >> amount;
-            // 금액 확인 및 전송 확인
-            // 소스 계좌에 돈 출금
-            // 목표 계좌에 돈 입금
+            cout << "you transfered " << amount << "won from " << sourceAccount << " to " << destinationAccount << endl;
+            // transfer fees
+            transferFunds(sourceAccount, destinationAccount, amount);
         }
         cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
     }
