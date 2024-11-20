@@ -5,6 +5,7 @@
 #include <string>
 using namespace std;
 
+class Bank;
 class Account {
 private:
     string userName;
@@ -21,7 +22,7 @@ public:
         : userName(name), accountNumber(number), password(pw), balance(initialFunds), mainbank(bankname) {}
 
     // 은행명 필요
-    static void setupAccount(vector<Bank> banks);
+    void setupAccount(vector<Bank> banks);
 
     // 은행 이름 반환 함수
     string getBankName() const {
@@ -209,19 +210,38 @@ bool checkPrimaryBank(const std::string& accountNumber, const std::string& prima
     //4
     void depositCash(int denomination, int count) {
         if (count > depositLimitCash) {
-            cout << "Error: Cash deposit limit of " << depositLimitCash << "bills exceeded." << endl;
+            cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
             return;
         }
 
-        int fee = transactionFees[depositFees()]; // 수표는 주 은행 수수료만 적용
+        double totalAmount = denomination * count;
+        int fee = (type == "Single Bank") ? transactionFees["deposit_primary"] : transactionFees["deposit_non_primary"];
+
         if (myAccount->getBalance() >= fee) {
-            myAccount->addFunds(count - fee);
-            cout << "Deposited check of " << count << " won to the account." << endl;
+            myAccount->addFunds(totalAmount - fee);
+            cashInventory[denomination] += count;
+            cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
             cout << "Deposit fee of " << fee << " won applied." << endl;
         } else {
-            cout << "Insufficient funds for check deposit fee." << endl;
+            cout << "Insufficient funds for deposit fee." << endl;
         }
     }
+
+void depositCheck(double amount) {
+    if (amount < 100000) {
+        cout << "Error: Minimum check amount is 100,000 won." << endl;
+        return;
+    }
+
+    int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
+    if (myAccount->getBalance() >= fee) {
+        myAccount->addFunds(amount - fee);
+        cout << "Deposited check of " << amount << " won to the account." << endl;
+        cout << "Deposit fee of " << fee << " won applied." << endl;
+    } else {
+        cout << "Insufficient funds for check deposit fee." << endl;
+    }
+}
 
     void handleDeposit() {
         int depositType;
@@ -381,7 +401,7 @@ bool checkPrimaryBank(const std::string& accountNumber, const std::string& prima
     }
 };
 
-static void Account::setupAccount(vector<Bank> banks) {
+void Account::setupAccount(vector<Bank> banks) {
     string userName, accountNumber, password, bankName;
     double initialBalance;
 
@@ -448,7 +468,8 @@ int main() {
     cin >> numAccounts;
     for (int i = 0; i < numAccounts; ++i) {
         cout << "\nCreating Account #" << (i + 1) << endl;
-        Account newAccount = Account::setupAccount(banks);
+        Account newAccount;
+        newAccount.setupAccount(banks);
         //myBank->addAccount(newAccount);
     }
     cout << "Complete to create account!" << endl;
