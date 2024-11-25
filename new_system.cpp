@@ -36,27 +36,27 @@ public:
     void addFunds(double amount) {
         try {
             if (amount < 0) {
-                throw invalid_argument("Deposit amount cannot be negative.");
+                throw invalid_argument("Deposit amount cannot be negative. 계좌 입금 금액은 음수일 수 없습니다.");
             }
             balance += amount;
-            recordTransaction("Deposit: " + to_string(amount) + " won");
+            recordTransaction("Deposit 금액: " + to_string(amount) + " won");
         } catch (const exception& e) {
-            cout << "Deposit error: " << e.what() << endl;
+            cout << "Deposit error 금액 오류: " << e.what() << endl;
         }
     }
 
     void deductFunds(double amount) {
         try {
             if (amount < 0) {
-                throw invalid_argument("Withdrawal amount cannot be negative.");
+                throw invalid_argument("Withdrawal amount cannot be negative. 출금 금액은 음수일 수 없습니다.");
             }
             if (balance < amount) {
-                throw runtime_error("Insufficient balance.");
+                throw runtime_error("Insufficient balance. 잔액 부족.");
             }
             balance -= amount;
-            recordTransaction("Withdrawal: " + to_string(amount) + " won");
+            recordTransaction("Withdrawal 출금 금액: " + to_string(amount) + " won 원");
         } catch (const exception& e) {
-            cout << "Withdrawal error: " << e.what() << endl;
+            cout << "Withdrawal error 출금 오류: " << e.what() << endl;
         }
     }
 
@@ -65,7 +65,7 @@ public:
     }
 
     void printTransactionHistory() {
-        cout << "Transaction History for " << accountNumber << ":" << endl;
+        cout << "Transaction History for " << accountNumber << "의 거래 기록:" << endl;
         for (const string& transaction : transactionHistory) {
             cout << transaction << endl;
         }
@@ -89,24 +89,24 @@ public:
         try {
             // 계좌 번호 중복 확인
             if (accounts.find(accountNumber) != accounts.end()) {
-                throw runtime_error("This account number already exists.");
+                throw runtime_error("This account number already exists. 계좌 번호가 이미 존재합니다.");
             }
 
             // 계좌 번호 유효성 확인 (12자리)
             if (accountNumber.length() != 12) {
-                throw invalid_argument("Account number must be 12 digits long.");
+                throw invalid_argument("Account number must be 12 digits long. 계좌 번호는 12자리여야 합니다.");
             }
 
             // 초기 잔액 음수 확인
             if (initialBalance < 0) {
-                throw invalid_argument("Initial balance cannot be negative.");
+                throw invalid_argument("Initial balance cannot be negative. 초기 잔액은 음수일 수 없습니다.");
             }
 
             // 계좌 추가
             accounts[accountNumber] = Account(userName, accountNumber, password, initialBalance, name);
-            cout << "Account successfully created: " << accountNumber << endl;
+            cout << "Account successfully created : " << accountNumber << "가 성공적으로 생성되었습니다." << endl;
         } catch (const exception& e) {
-            cout << "Error creating account: " << e.what() << endl;
+            cout << "Error creating account 계좌 생성 오류: " << e.what() << endl;
         }
     }
 
@@ -115,11 +115,11 @@ public:
         try {
             auto it = accounts.find(accountNumber);
             if (it == accounts.end()) {
-                throw runtime_error("Account not found.");
+                throw runtime_error("Account not found. 계좌를 찾을 수 없습니다.");
             }
             return &it->second;
         } catch (const exception& e) {
-            cout << "Error finding account: " << e.what() << endl;
+            cout << "Error finding account 계좌 검색 오류: " << e.what() << endl;
             return nullptr;
         }
     }
@@ -129,11 +129,11 @@ public:
         try {
             Account* account = getAccount(accountNumber);
             if (!account) {
-                throw runtime_error("Account is invalid, cannot verify password.");
+                throw runtime_error("Account is invalid, cannot verify password. 계좌가 유효하지 않아 비밀번호를 확인할 수 없습니다.");
             }
             return account->verifyPassword(password);
         } catch (const exception& e) {
-            cout << "Password verification error: " << e.what() << endl;
+            cout << "Password verification error 비밀번호 확인 오류: " << e.what() << endl;
             return false;
         }
     }
@@ -145,30 +145,32 @@ public:
             Account* destAcc = getAccount(destinationAccount);
 
             if (!srcAcc || !destAcc) {
-                throw runtime_error("Source or destination account not found.");
+                throw runtime_error("Source or destination account not found. 소스 또는 대상 계좌를 찾을 수 없습니다.");
             }
 
             if (amount <= 0) {
-                throw invalid_argument("송금 금액은 0보다 커야 합니다.");
+                throw invalid_argument("Transfer amount should be bigger than 0. 송금 금액은 0보다 커야 합니다.");
             }
 
             srcAcc->deductFunds(amount);
             destAcc->addFunds(amount);
 
             cout << "송금 완료: " << sourceAccount << "에서 " << destinationAccount << "로 " << amount << "원이 송금되었습니다." << endl;
+            cout << "Transfer complete: from " << sourceAccount << " to " << destinationAccount << ", " << amount << "won is transferred." << endl;
+
         } catch (const exception& e) {
-            cout << "송금 중 오류: " << e.what() << endl;
+            cout << "Transfer error 송금 중 오류: " << e.what() << endl;
         }
     }
 
     // 모든 계좌 정보 출력
     void printAllAccounts() const {
-        cout << "은행: " << name << " - 계좌 목록" << endl;
+        cout << "Bank 은행: " << name << " - accounts list 계좌 목록" << endl;
         for (const auto& pair : accounts) {
             const Account& account = pair.second;
-            cout << "계좌 번호: " << account.getAccountNumber()
-                 << ", 소유자: " << account.getUserName()
-                 << ", 잔액: " << account.getBalance() << " 원" << endl;
+            cout << "Account number 계좌 번호: " << account.getAccountNumber()
+                 << ", owner 소유자: " << account.getUserName()
+                 << ", remain 잔액: " << account.getBalance() << " 원" << endl;
         }
     }
 };
@@ -204,7 +206,7 @@ public:
 
     void performTransaction() override {
         if (count > 50) { // 최대 입금 한도 검사
-            cout << "Error: Maximum limit of 50 bills exceeded for deposit.\n";
+            cout << "Error: Maximum limit of 50 bills exceeded for deposit. 최대 50장의 지폐만 삽입할 수 있습니다." << endl;
             return;
         }
         double totalAmount = denomination * count; // 입금 금액 계산
@@ -214,6 +216,8 @@ public:
         cashInventory[denomination] += count; // ATM 현금 보유량 갱신
         cout << "Deposited " << count << " bills of " << denomination << " KRW. Total credited: "
              << totalAmount - fee << " KRW. Fee applied: " << fee << " KRW.\n";
+        cout << "입금 완료: " << denomination << "원 지폐 " << count << "장을 삽입했습니다. 총 입금액: "
+             << totalAmount - fee << "원. 수수료: " << fee << "원." << endl;
     }
 };
 
@@ -233,7 +237,7 @@ public:
 
     void performTransaction() override {
         if (amount > 500000) { // 최대 출금 한도 검사
-            cout << "Error: Maximum withdrawal limit is 500,000 KRW.\n";
+            cout << "Error: Maximum withdrawal limit is 500,000 KRW. 최대 출금 한도는 500,000원 입니다." << endl;
             return;
         }
 
@@ -241,7 +245,7 @@ public:
         double totalAmount = amount + fee; // 총 출금 금액(수수료 포함)
 
         if (account->getBalance() < totalAmount) { // 잔액 부족 검사
-            cout << "Error: Insufficient account balance.\n";
+            cout << "Error: Insufficient account balance. 잔액 부족." << endl;
             return;
         }
 
@@ -259,15 +263,16 @@ public:
         }
 
         if (remainingAmount > 0) { // ATM 잔액 부족 확인
-            cout << "Error: ATM has insufficient cash to complete the withdrawal.\n";
+            cout << "Error: ATM has insufficient cash to complete the withdrawal. 출금할 현금이 부족합니다." << endl;
             return;
         }
 
         account->deductFunds(totalAmount); // 계좌에서 총 출금 금액 차감
-        cout << "Withdrawal successful! Dispensed: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
+        cout << "Withdrawal successful! 출금 완료! Dispensed 배출됨: " << amount << " KRW. Fee applied 거래 수수료: " << fee << " KRW.\n";
         for (const auto& pair : billsToDispense) {
             if (pair.second > 0) {
-                cout << pair.second << " bills of " << pair.first << " KRW dispensed.\n";
+                cout << pair.second << " bills of " << pair.first << " KRW dispensed." << endl;
+                cout << pair.second << "장의 " << pair.first << "원 지폐가 배출되었습니다." << endl;
             }
         }
     }
@@ -298,13 +303,14 @@ public:
         int fee = transactionFees[feeType]; // 수수료 계산
 
         if (account->getBalance() < amount + fee) { // 잔액 부족 검사
-            cout << "Error: Insufficient account balance for transfer.\n";
+            cout << "Error: Insufficient account balance for transfer. 송금 계좌의 잔액이 부족합니다." << endl;
             return;
         }
 
         account->deductFunds(amount + fee); // 송금 계좌에서 금액 차감
         destinationAccount->addFunds(amount); // 대상 계좌에 금액 추가
-        cout << "Transfer successful! Amount: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
+        cout << "Transfer successful! 거래 완료! Amount 금액 : " << amount << " KRW. Fee applied 거래 수수료 : " << fee << " KRW.\n";
+
     }
 };
 
@@ -326,7 +332,7 @@ public:
     // ATM 초기화
     void setupATM() {
         while (true) {
-            cout << "Enter 6-digit ATM serial number: ";
+            cout << "Enter 6-digit ATM serial number 6자리의 ATM 시리얼 번호를 입력하세요: ";
             cin >> serialNumber;
             if (serialNumber.length() == 6 && all_of(serialNumber.begin(), serialNumber.end(), ::isdigit)) {
                 break;
