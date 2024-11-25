@@ -669,7 +669,7 @@ int main() {
 
         cout << "Enter ATM number (1 to " << atms.size() << ") or 0 to exit: ";
         int atmChoice;
-        cin >> atmChoice;
+        cin >> atmChoice; // 잘못된 타입의 입력을 받으면 무한루프 돎.
 
         if (atmChoice == 0) {
             cout << "Exiting the system. Goodbye!\n";
