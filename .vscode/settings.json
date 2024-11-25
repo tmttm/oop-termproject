@@ -5,7 +5,8 @@
         "ostream": "cpp",
         "iostream": "cpp",
         "new": "cpp",
-        "exception": "cpp"
+        "exception": "cpp",
+        "unordered_set": "cpp"
     },
     "files.exclude": {
         "**/*.rpyc": true,
