@@ -20,6 +20,7 @@ void recordTransaction(const string& transaction_type, double amount, const stri
         destination,
     };
     transaction_log.push_back(transaction);
+    printTransactionLog;
 }
 
 // 거래 기록을 출력하는 함수
