@@ -8,6 +8,7 @@
 #include <cctype>
 using namespace std;
 
+// h2
 class Account {
 private:
     string userName; // 계좌 소유자 이름
