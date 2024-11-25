@@ -20,14 +20,6 @@ void recordTransaction(const string& transaction_type, double amount, const stri
         destination,
     };
     transaction_log.push_back(transaction);
-
-    // 로그 출력
-    cout << "Transaction log: " 
-         << transaction.transaction_type << " | " 
-         << transaction.amount << "won | " 
-         << transaction.source << " -> " 
-         << transaction.destination << " | " 
-         << transaction.timestamp << endl;
 }
 
 // 거래 기록을 출력하는 함수
