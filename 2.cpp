@@ -75,7 +75,6 @@ public:
     bool verifyPassword(const string& pw) const {return password == pw;}
 };
 
-class Bank : public Account {
 private:
     string name;
     unordered_map<string, Account> accounts;
