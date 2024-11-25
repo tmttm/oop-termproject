@@ -540,6 +540,7 @@ public:
                         break;
                     default:
                         cout << "Invalid choice. Try again.\n";
+                        break;
                 }
             } while (action != 5);
         } else {

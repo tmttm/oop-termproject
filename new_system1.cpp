@@ -63,6 +63,9 @@ public:
     void recordTransaction(const string& transaction) {
         transactionHistory.push_back(transaction);
     }
+    void recordTransaction(string ID, string cdnumber, string types, int amount, string info){
+        transactionHistory.push_back(ID + " " + cdnumber + " " + types + " " + to_string(amount) + " " + info);
+    }
 
     void printTransactionHistory() {
         cout << "Transaction History for " << accountNumber << ":" << endl;
@@ -467,10 +470,19 @@ public:
     // 입금 함수
     void deposit() {
         int denomination, count;
-        cout << "Enter denomination (1000, 5000, 10000, 50000): ";
-        cin >> denomination;
-        cout << "Enter number of bills: ";
-        cin >> count;
+        
+        while (1){
+            cout << "Enter denomination (1000, 5000, 10000, 50000): ";
+            cin >> denomination;
+            if (denomination != 1000 && denomination != 5000 && denomination != 10000 && denomination != 50000){
+                cout << "Invalid denomination. Please enter a valid bill amount.\n";
+                continue;
+            }
+            cout << "Enter number of bills: ";
+            cin >> count;
+            break;
+        }
+        
 
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
@@ -566,7 +578,7 @@ public:
                     default:
                         cout << "Invalid choice. Try again.\n";
                 }
-            } while (action != 5);
+            } while (action != 4);
         } else {
             cout << "Authentication failed. Returning to main menu.\n";
         }
