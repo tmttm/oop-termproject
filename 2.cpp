@@ -46,7 +46,7 @@ public:
     }
 
     // 은행명 필요
-    void setupAccount(vector<Bank> banks);
+    void setupAccount(vector<Bank>& banks, vector<Account>& accounts);
 
     // 은행 이름 반환 함수
     string getBankName() const {
@@ -384,8 +384,8 @@ void depositCheck(double amount) {
             cout << "1000won bills : ";
             cin >> amount1000;
             amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
-            // transaction fees
-            cout << "you transfered " << amount << "won to " << destinationAccount << endl;
+            amount -= transactionFees["cash_transfer"];
+            cout << "You transfered " << amount << "won to " << destinationAccount << ". Transfer fee 1000won was paid." << endl;
             
             findAccount(destinationAccount, accounts)->addFunds(amount);
             cashInventory[50000] += amount50000;
@@ -399,15 +399,17 @@ void depositCheck(double amount) {
             cout << "input the amount of fund to transfer" << endl;
             cin >> amount;
             cout << "you transfered " << amount << "won from " << myAccount->getAccountNumber() << " to " << destinationAccount << endl;
-            // transfer fees
+            int sourcefee = transactionFees[transferFees(myAccount->getBankName())];
+            int destinationfee = transactionFees[transferFees(findAccount(destinationAccount, accounts)->getBankName())];
+            int fee = sourcefee>destinationfee ? sourcefee : destinationfee;
             findAccount(destinationAccount, accounts)->addFunds(amount);
-            myAccount->deductFunds(amount);
+            myAccount->deductFunds(amount+fee);
         }
         cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
     }
 };
 
-void Account::setupAccount(vector<Bank> banks) {
+void Account::setupAccount(vector<Bank>& banks, vector<Account>& accounts) {
     string userName, accountNumber, password, bankName;
     double initialBalance;
 
@@ -428,7 +430,7 @@ void Account::setupAccount(vector<Bank> banks) {
 
     // 새로운 Account 객체 생성
     Account newAccount(userName, accountNumber, password, initialBalance, bankName);
-
+    cout << "Account created: " << newAccount.getAccountNumber() << endl;
     // 입력된 bankName에 맞는 Bank 객체 찾기
     Bank* targetBank = findBank(newAccount, newAccount.getBankName(), banks);
 
@@ -437,9 +439,11 @@ void Account::setupAccount(vector<Bank> banks) {
         banks.push_back(Bank(newAccount.getBankName()));
         targetBank = &banks.back();
     }
-
+    cout << "Bank found: " << targetBank->getName() << endl;
     // 계좌를 해당 은행에 추가
     targetBank->addAccount(newAccount);
+    accounts.push_back(newAccount);
+    cout << "Account added to bank." << endl;
 }
 void Account::addFunds(double amount) {
     balance += amount;
@@ -470,8 +474,8 @@ int main() {
     for (int i = 0; i < numAccounts; ++i) {
         cout << "\nCreating Account #" << (i + 1) << endl;
         Account newAccount;
-        newAccount.setupAccount(banks);
-        accounts.push_back(newAccount);
+        newAccount.setupAccount(banks, accounts);
+        printf("Account created: %s\n", newAccount.getAccountNumber().c_str());
         //myBank->addAccount(newAccount);
     }
     cout << "Complete to create account!" << endl;
