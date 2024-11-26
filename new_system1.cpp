@@ -495,7 +495,7 @@ public:
                 cout << "Authentication failed. Please check your account number or password.\n";
             }
         } else {
-            cout << "Error: Invalid ATM type.\n"; // myBank가 nullptr일 시 (거의 X)
+            cout << "Error: Invalid ATM type.\n";
         }
     }
 
