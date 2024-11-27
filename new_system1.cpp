@@ -88,6 +88,8 @@ public:
     // 은행 이름 반환
     string getName() const { return name; }
 
+    unordered_map<string, Account> getAllAccounts() const { return accounts; }
+
     // 계좌 생성 (createAccount)
     void createAccount(const string& userName, const string& accountNumber, const string& password, double initialBalance) {
         try {
