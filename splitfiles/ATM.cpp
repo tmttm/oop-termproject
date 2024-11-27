@@ -171,7 +171,7 @@ void ATM::withdraw() {
 void ATM::transferFunds() {
     string destAccountNumber;
     cout << "Enter destination account number: ";
-    cin >> destAccountNumber;
+    cin >> destAccouㅋntNumber;
 
     Account* destAccount = myBank->getAccount(destAccountNumber);
     if (!destAccount) {
@@ -207,7 +207,8 @@ void ATM::displaySnapshot() {
 }
 
 void ATM::runATM(vector<Bank*>& banks) {
-    do {
+    int incorrectAttempts = 0;
+    while (true) {
         cout << "Insert your card (account number): ";
         string accountNumber, password;
         cin >> accountNumber;
@@ -215,8 +216,19 @@ void ATM::runATM(vector<Bank*>& banks) {
         cin >> password;
 
         insert_card(accountNumber, password, banks); // 카드 삽입 및 계좌 인증
-        cout << isSessionActive() << endl; // 디버깅
-    } while (!isSessionActive());
+        if (isSessionActive()) {
+            break;
+        }
+        else {
+            incorrectPasswordAttempts++;
+            cout << "Authentication failed. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+
+            if (incorrectPasswordAttempts == 3) {
+                cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
+                return;
+            }
+        }
+    }
 
     if (isSessionActive()) {
         char action;
