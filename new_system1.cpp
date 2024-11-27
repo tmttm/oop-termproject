@@ -99,28 +99,8 @@ public:
 
     // 계좌 생성 (createAccount)
     void createAccount(const string& userName, const string& accountNumber, const string& cardNumber, const string& password, double initialBalance) {
-        try {
-            // 카드 번호 중복 확인
-            if (accounts.find(cardNumber) != accounts.end()) {
-                throw runtime_error("This card number already exists.");
-            }
-
-            // 계좌 번호 유효성 확인 (12자리)
-            if (accountNumber.length() != 12) {
-                throw invalid_argument("Account number must be 12 digits long.");
-            }
-
-            // 초기 잔액 음수 확인
-            if (initialBalance < 0) {
-                throw invalid_argument("Initial balance cannot be negative.");
-            }
-
-            // 계좌 추가
-            accounts[cardNumber] = Account(userName, accountNumber, cardNumber, password, initialBalance, name);        
-            cout << "Account successfully created: " << accountNumber << endl;
-        } catch (const exception& e) {
-            cout << "Error creating account: " << e.what() << endl;
-        }
+        accounts[cardNumber] = Account(userName, accountNumber, cardNumber, password, initialBalance, name);
+        cout << "Account successfully created: " << accountNumber << endl;
     }
 
     // 계좌 검색
@@ -511,6 +491,7 @@ public:
                     myAccount = myBank->getAccount(cardNumber);
                     authenticated = true;
                     cout << "Session started on ATM with serial number " << serialNumber << " for Single Bank ATM.\n";
+                    cout << "Hello, " << myAccount->getUserName() << "!\n";
                 } else {
                     cout << "Authentication failed. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
                 }
@@ -773,14 +754,65 @@ int main() {
 
         cout << "Enter your name: ";
         cin >> userName;
-        cout << "Enter 12-digit account number: ";
-        cin >> accountNumber;
-        cout << "Enter card number: ";
-        cin >> cardNumber;
+
+        // 계좌 번호 입력 및 중복 검사
+        while (true) {
+            cout << "Enter 12-digit account number: ";
+            cin >> accountNumber;
+
+            bool isDuplicate = false;
+            for (Bank* bank : banks) {
+                if (bank->getAccountByNumber(accountNumber)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+
+            if (accountNumber.length() != 12) {
+                cout << "Error: Account number must be exactly 12 numeric digits. Try again.\n";
+            }
+            else if (isDuplicate) {
+                cout << "Error: This account number already exists. Please try a different one.\n";
+            }
+            else {
+                break;
+            }
+        }
+
+        // 카드 번호 입력 및 중복 검사
+        while (true) {
+            cout << "Enter the card number: ";
+            cin >> cardNumber;
+
+            bool isDuplicate = false;
+            for (Bank* bank : banks) {
+                if (bank->getAccount(cardNumber)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            
+            if (isDuplicate) {
+                cout << "Error: This card number already exists. Please try a different one.\n";
+            }
+            else {
+                break;
+            }
+        }
+
         cout << "Enter password: ";
         cin >> password;
-        cout << "Enter initial balance: ";
-        cin >> initialBalance;
+
+        // 초기 잔액 입력 및 유효성 검사
+        while (true) {
+            cout << "Enter initial balance: ";
+            cin >> initialBalance;
+            if (initialBalance < 0) {
+                cout << "Error: Initial balance cannot be negative. Try again.\n";
+            } else {
+                break;
+            }
+        }
 
         // 선택된 은행에 계좌 생성
         targetBank->createAccount(userName, accountNumber, cardNumber, password, initialBalance);
