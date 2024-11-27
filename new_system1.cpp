@@ -628,7 +628,7 @@ public:
             char action;
             do {
                 cout << "\n--- ATM Menu ---\n";
-                cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Exit\n/. Display Snapshot\n";
+                cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Cancel\n/. Display Snapshot\n";
                 cout << "Select an action: ";
                 cin >> action;
 
