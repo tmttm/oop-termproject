@@ -466,6 +466,8 @@ public:
         return myAccount;
     }
 
+    unordered_map<int, int> getCashInventory() const { return cashInventory; }
+
     void insert_card(const string& accountNumber, const string& password, vector<Bank*>& banks) {
         bool authenticated = false;
 
