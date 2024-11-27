@@ -6,7 +6,11 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 using namespace std;
+
+ofstream logFile
+logFile.open("log.txt");
 
 // h2
 class Account {
@@ -391,6 +395,7 @@ private:
     Bank* myBank;                       // 주거래 은행
     Account* myAccount;                 // 현재 로그인된 계좌
     static int withdrawalCount;         // 세션당 출금 횟수
+    string AdminCard = "admin";         // 관리자 카드 번호
 
 public:
     ATM() : sessionActive(false), myBank(nullptr), myAccount(nullptr) {}
@@ -639,53 +644,76 @@ public:
             cout << "Insert your card (card number): ";
             string accountNumber, password;
             cin >> accountNumber;
-            cout << "Enter your password: ";
-            cin >> password;
-
-            insert_card(accountNumber, password, banks); // 카드 삽입 및 계좌 인증
-
-            if (isSessionActive()) {
-                break;
+            if (accountNumber == AdminCard){
+                cout << "Admin mode activated.\n";
+                while(True){
+                    cout << "--- Admin Menu ---\n";
+                    cout << "1. Transaction history\n2. Exit\n";
+                    int adminChoice;
+                    cin >> adminChoice;
+                    if (adminChoice == 1){
+                        for (const auto& pair : banks) {
+                            Account accounts = pair->getAllAccounts();
+                            for (const auto& pair : accounts) {
+                                Account account = pair.second;
+                                account.printTransactionHistory();
+                            }
+                        }
+                        break;
+                    }
+                    else if (adminChoice == 2){
+                        break;
+                    }
+                    else{
+                        cout << "Invalid choice. Try again.\n";
+                    }
+                }
             }
             else {
-                incorrectPasswordAttempts++;
-                cout << "Authentication failed. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+                cout << "Enter your password: ";
+                cin >> password;
 
-                if (incorrectPasswordAttempts == 3) {
-                    cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
-                    return;
+                insert_card(accountNumber, password, banks); // 카드 삽입 및 계좌 인증
+
+                if (isSessionActive()) {
+                    char action;
+                    do {
+                        cout << "\n--- ATM Menu ---\n";
+                        cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Cancel\n/. Display Snapshot\n";
+                        cout << "Select an action: ";
+                        cin >> action;
+
+                        switch (action) {
+                            case '1': 
+                                deposit(); // 입금 함수 호출
+                                break;
+                            case '2': 
+                                withdraw(); // 출금 함수 호출
+                                break;
+                            case '3': 
+                                transferFunds(banks); // 송금 함수 호출
+                                break;
+                            case '4': 
+                                end_session(); // 세션 종료
+                                break;
+                            case '/': 
+                                displaySnapshot(atms, banks); // 스냅샷 출력
+                                break;
+                            default:
+                                cout << "Invalid choice. Try again.\n";
+                        }
+                    } while (action != '4' || isSessionActive());
+                }
+                else {
+                    incorrectPasswordAttempts++;
+                    cout << "Authentication failed. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+
+                    if (incorrectPasswordAttempts == 3) {
+                        cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
+                        return;
+                    }
                 }
             }
-        }
-
-        if (isSessionActive()) {
-            char action;
-            do {
-                cout << "\n--- ATM Menu ---\n";
-                cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Cancel\n/. Display Snapshot\n";
-                cout << "Select an action: ";
-                cin >> action;
-
-                switch (action) {
-                    case '1': 
-                        deposit(); // 입금 함수 호출
-                        break;
-                    case '2': 
-                        withdraw(); // 출금 함수 호출
-                        break;
-                    case '3': 
-                        transferFunds(banks); // 송금 함수 호출
-                        break;
-                    case '4': 
-                        end_session(); // 세션 종료
-                        break;
-                    case '/': 
-                        displaySnapshot(atms, banks); // 스냅샷 출력
-                        break;
-                    default:
-                        cout << "Invalid choice. Try again.\n";
-                }
-            } while (action != '4' || isSessionActive());
         }
     }
 };
