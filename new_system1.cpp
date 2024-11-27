@@ -192,12 +192,14 @@ public:
 class Deposit : public Trans {
 private:
     unordered_map<int, int>& cashInventory; // ATM의 현금 보유량
+    int denomination; // 입금할 지폐의 액면가
+    int count; // 입금할 지폐의 개수
     int depositLimitCash = 50; // 현금 입금 한도
     double minimumCheckAmount = 100000; // 수표 입금 최소 금액
 
 public:
-    Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv)
-        : Trans(acc, bnk, fees), cashInventory(cashInv) {}
+    Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, int denom, int cnt)
+        : Trans(acc, bnk, fees), cashInventory(cashInv), denomination(denom), count(cnt) {}
 
     string calculateFees() {
         return (account->getBankName() == bank->getName()) ? "deposit_primary" : "deposit_non_primary";
