@@ -247,9 +247,17 @@ public:
         cin >> choice;
 
         if (choice == 1) {
-            int denomination, count;
-            cout << "Enter denomination and count (e.g., 10000 5): ";
-            cin >> denomination >> count;
+            while (1){
+                cout << "Enter denomination (1000, 5000, 10000, 50000): ";
+                cin >> denomination;
+                if (denomination != 1000 && denomination != 5000 && denomination != 10000 && denomination != 50000){
+                    cout << "Invalid denomination. Please enter a valid bill amount.\n";
+                    continue;
+                }
+                cout << "Enter number of bills: ";
+                cin >> count;
+                break;
+            }
             depositCash(denomination, count);
         } else if (choice == 2) {
             double amount;
@@ -525,20 +533,7 @@ public:
 
     // 입금 함수
     void deposit() {
-        int denomination, count;
-        
-        while (1){
-            cout << "Enter denomination (1000, 5000, 10000, 50000): ";
-            cin >> denomination;
-            if (denomination != 1000 && denomination != 5000 && denomination != 10000 && denomination != 50000){
-                cout << "Invalid denomination. Please enter a valid bill amount.\n";
-                continue;
-            }
-            cout << "Enter number of bills: ";
-            cin >> count;
-            break;
-        }
-        
+        int denomination, count;      
 
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
