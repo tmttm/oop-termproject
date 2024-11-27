@@ -577,28 +577,37 @@ public:
         transfer.performTransaction();
     }
 
-    // ATM 상태와 계좌 상태 출력 (스냅샷 기능)
-    void displaySnapshot() {
-        cout << "\n--- ATM Snapshot ---" << endl;
-        cout << "Serial Number: " << serialNumber << endl;
-        cout << "Type: " << type << endl;
-        cout << "Cash Inventory:\n";
-        for (const auto& pair : cashInventory) {
-            cout << pair.first << " KRW bills: " << pair.second << endl;
+    void displaySnapshot(const vector<ATM>& atms, const vector<Bank*>& banks) {
+        cout << "\n--- All ATMs Snapshot ---" << endl;
+
+        // ATM 정보 출력
+        for (const auto& atm : atms) {
+            cout << "ATM [SN: " << atm.getSerialNumber() << "] remaining cash: {";
+            bool first = true;
+            for (const auto& pair : atm.getCashInventory()) {
+                if (!first) cout << ", ";
+                cout << "KRW " << pair.first << ": " << pair.second;
+                first = false;
+            }
+            cout << "}" << endl;
         }
 
-        if (sessionActive && myAccount) {
-            cout << "\n--- Account Snapshot ---" << endl;
-            cout << "Account Number: " << myAccount->getAccountNumber() << endl;
-            cout << "Owner: " << myAccount->getUserName() << endl;
-            cout << "Balance: " << myAccount->getBalance() << " KRW\n";
-        } else {
-            cout << "No active account session.\n";
+        cout << "\n--- All Accounts Snapshot ---" << endl;
+
+        // 계좌 정보 출력
+        for (const auto& bank : banks) {
+            for (const auto& accountPair : bank->getAllAccounts()) {
+                const Account& account = accountPair.second;
+                cout << "Account [Bank: " << bank->getName()
+                    << ", No: " << account.getAccountNumber()
+                    << ", Owner: " << account.getUserName()
+                    << "] balance: " << account.getBalance() << " KRW" << endl;
+            }
         }
     }
 
     // ATM 실행 (메뉴 인터페이스)
-    void runATM(vector<Bank*>& banks) {
+    void runATM(vector<ATM>& atms, vector<Bank*>& banks) {
         int incorrectPasswordAttempts = 0; // 잘못된 비밀번호 시도 횟수
 
         while (true) {
@@ -646,7 +655,7 @@ public:
                         end_session(); // 세션 종료
                         break;
                     case '/': 
-                        displaySnapshot(); // 스냅샷 출력
+                        displaySnapshot(atms, banks); // 스냅샷 출력
                         break;
                     default:
                         cout << "Invalid choice. Try again.\n";
@@ -753,7 +762,7 @@ int main() {
         }
 
         // 선택한 ATM 실행
-        atms[atmChoice - 1].runATM(banks); // ATM의 세션 시작
+        atms[atmChoice - 1].runATM(atms, banks); // ATM의 세션 시작
     }
 
     // 동적 할당된 Bank 메모리 해제
