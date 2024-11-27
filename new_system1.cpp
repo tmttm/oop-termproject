@@ -264,10 +264,11 @@ class Withdraw : public Trans {
 private:
     unordered_map<int, int>& cashInventory; // ATM의 현금 보유량
     double amount; // 출금 요청 금액
+    bool successful; // 출금 성공 여부
 
 public:
     Withdraw(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, double amt)
-        : Trans(acc, bnk, fees), cashInventory(cashInv), amount(amt) {}
+        : Trans(acc, bnk, fees), cashInventory(cashInv), amount(amt), successful(false) {}
 
     string calculateFees() {
         return (account->getBankName() == bank->getName()) ? "withdrawal_primary" : "withdrawal_non_primary";
@@ -306,6 +307,8 @@ public:
         }
 
         account->deductFunds(totalAmount); // 계좌에서 총 출금 금액 차감
+        successful = true; // 출금 성공 여부 설정
+
         cout << "Withdrawal successful! Dispensed: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
         for (const auto& pair : billsToDispense) {
             if (pair.second > 0) {
@@ -313,6 +316,8 @@ public:
             }
         }
     }
+
+    bool isSuccessful() const { return successful; }
 };
 
 // 송금 (Transfer) 클래스
@@ -361,6 +366,7 @@ private:
     bool sessionActive;                 // 현재 세션 활성화 여부
     Bank* myBank;                       // 주거래 은행
     Account* myAccount;                 // 현재 로그인된 계좌
+    static int withdrawalCount;         // 세션당 출금 횟수
 
 public:
     ATM() : sessionActive(false), myBank(nullptr), myAccount(nullptr) {}
@@ -505,6 +511,7 @@ public:
             sessionActive = false;
             cout << "Session ended. Please take your card." << endl;
             myAccount = nullptr;
+            withdrawalCount = 0;
         } else {
             cout << "No active session to end.\n";
         }
@@ -533,12 +540,21 @@ public:
 
     // 출금 함수
     void withdraw() {
+        if (withdrawalCount >= 3) { // 세션당 출금 횟수 제한 검사
+            cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
+            end_session();
+        }
         double amount;
         cout << "Enter amount to withdraw: ";
         cin >> amount;
 
         Withdraw withdraw(myAccount, myBank, transactionFees, cashInventory, amount);
         withdraw.performTransaction();
+    
+        // 출금이 성공적으로 수행된 경우에만 카운트 증가
+        if (withdraw.isSuccessful()) {
+            withdrawalCount++;
+        }
     }
 
     // 송금 함수
@@ -591,7 +607,7 @@ public:
             cin >> password;
 
             insert_card(accountNumber, password, banks); // 카드 삽입 및 계좌 인증
-            cout << isSessionActive() << endl;
+            cout << isSessionActive() << endl; // 디버깅
         } while (!isSessionActive());
 
         if (isSessionActive()) {
@@ -621,12 +637,13 @@ public:
                     default:
                         cout << "Invalid choice. Try again.\n";
                 }
-            } while (action != 4);
+            } while (action != 4 || isSessionActive());
         } else {
             cout << "Authentication failed. Returning to main menu.\n";
         }
     }
 };
+int ATM::withdrawalCount = 0;
 
 
 int main() {
