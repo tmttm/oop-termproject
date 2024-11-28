@@ -9,8 +9,9 @@
 #include <fstream>
 using namespace std;
 
-ofstream logFile
-logFile.open("log.txt");
+
+//ofstream logFile;
+//logFile.open("log.txt");
 
 // h2
 class Account {
@@ -627,14 +628,14 @@ public:
             cin >> accountNumber;
             if (accountNumber == AdminCard){
                 cout << "Admin mode activated.\n";
-                while(True){
+                while(1){
                     cout << "--- Admin Menu ---\n";
                     cout << "1. Transaction history\n2. Exit\n";
                     int adminChoice;
                     cin >> adminChoice;
                     if (adminChoice == 1){
                         for (const auto& pair : banks) {
-                            Account accounts = pair->getAllAccounts();
+                            unordered_map<string, Account> accounts = pair->getAllAccounts();
                             for (const auto& pair : accounts) {
                                 Account account = pair.second;
                                 account.printTransactionHistory();
