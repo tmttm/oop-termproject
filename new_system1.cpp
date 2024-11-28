@@ -10,8 +10,8 @@
 using namespace std;
 
 
-//ofstream logFile;
-//logFile.open("log.txt");
+ofstream fout;
+fout.open("TransactionLog.txt");
 
 // h2
 class Account {
@@ -50,7 +50,7 @@ public:
                 throw invalid_argument("Deposit amount cannot be negative.");
             }
             balance += amount;
-            recordTransaction(to_string(transactionID++), cardNumber, "Deposit", amount, "Deposit: " + to_string(amount) + " won");
+            
         } catch (const exception& e) {
             cout << "Deposit error: " << e.what() << endl;
         }
@@ -65,7 +65,7 @@ public:
                 throw runtime_error("Insufficient balance.");
             }
             balance -= amount;
-            recordTransaction(to_string(transactionID++), cardNumber, "Withdrawal", amount, "Withdrawal: " + to_string(amount) + " won");
+            
         } catch (const exception& e) {
             cout << "Withdrawal error: " << e.what() << endl;
         }
@@ -77,6 +77,7 @@ public:
 
     void printTransactionHistory() {
         cout << "Transaction History for " << accountNumber << ":" << endl;
+        fout << "Transaction History for " << accountNumber << ":" << endl;
         for (const string& transaction : transactionHistory) {
             cout << transaction << endl;
         }
@@ -537,6 +538,7 @@ public:
 
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
+        myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "deposit", denomination * count, "deposit");
     }
 
     // 출금 함수
@@ -555,38 +557,67 @@ public:
         // 출금이 성공적으로 수행된 경우에만 카운트 증가
         if (withdraw.isSuccessful()) {
             withdrawalCount++;
+            myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
         }
     }
 
     // 송금 함수
     void transferFunds(vector<Bank*>& banks) {
-    string destAccountNumber;
-    cout << "Enter destination account number: ";
-    cin >> destAccountNumber;
+        int choice;
+        cout << "Choose transfer type: \n1. Account Transfer\n2. Cash Transfer\n";
+        cin >> choice;
 
-    Account* destAccount = nullptr;
-    Bank* destBank = nullptr;
+        string destAccountNumber;
+        cout << "Enter destination account number: ";
+        cin >> destAccountNumber;
 
-    for (Bank* bank : banks) {
-        destAccount = bank->getAccountByNumber(destAccountNumber); // 계좌번호로 검색
-        if (destAccount) {
-            destBank = bank; // 목적 은행 설정
-            break;
+        Account* destAccount = nullptr;
+        Bank* destBank = nullptr;
+
+        for (Bank* bank : banks) {
+            destAccount = bank->getAccountByNumber(destAccountNumber); // 계좌번호로 검색
+            if (destAccount) {
+                destBank = bank; // 목적 은행 설정
+                break;
+            }
         }
+
+        if (!destAccount) {
+            cout << "Destination account not found.\n";
+            return;
+        }
+        if (choice == 1) {
+            double amount;
+            cout << "Enter transfer amount: ";
+            cin >> amount;
+
+            Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
+            transfer.performTransaction();
+            myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "transfer", amount, "transfer");
+        } else if (choice == 2) {
+            int amount50000, amount10000, amount5000, amount1000;
+            int amount = 0;
+            cout << "Insert cash and transition fees" << endl;
+            cout << "50000won bills : ";
+            cin >> amount50000;
+            cout << "10000won bills : ";
+            cin >> amount10000;
+            cout << "5000won bills : ";
+            cin >> amount5000;
+            cout << "1000won bills : ";
+            cin >> amount1000;
+            amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
+            amount -= transactionFees["cash_transfer"];
+            cout << "You transfered " << amount << "won to " << destAccountNumber << ". Transfer fee" << transactionFees["cash_transfer"] << "was paid." << endl;
+            destAccount->addFunds(amount);
+            cashInventory[50000] += amount50000;
+            cashInventory[10000] += amount10000;
+            cashInventory[5000] += amount5000;
+            cashInventory[1000] += amount1000;
+            destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "transfer", amount, "transfer");
+        }
+        
     }
-
-    if (!destAccount) {
-        cout << "Destination account not found.\n";
-        return;
-    }
-
-    double amount;
-    cout << "Enter transfer amount: ";
-    cin >> amount;
-
-    Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
-    transfer.performTransaction();
-}
 
     void displaySnapshot(const vector<ATM>& atms, const vector<Bank*>& banks) {
         cout << "\n--- All ATMs Snapshot ---" << endl;
@@ -856,6 +887,7 @@ int main() {
     for (Bank* bank : banks) {
         delete bank;
     }
+    fout.close();
 
     return 0;
 }
