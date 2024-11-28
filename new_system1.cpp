@@ -23,6 +23,7 @@ private:
     double balance; // 계좌 잔액
     vector<string> transactionHistory; // 거래 내역
     string mainbank; // 소속 은행 이름
+    static int transactionID; // 거래 ID
 
 public:
     Account() : userName(""), accountNumber(""), cardNumber(""), password(""), balance(0.0), mainbank("") {}
@@ -48,7 +49,7 @@ public:
                 throw invalid_argument("Deposit amount cannot be negative.");
             }
             balance += amount;
-            recordTransaction("Deposit: " + to_string(amount) + " won");
+            recordTransaction(to_string(transactionID++), cardNumber, "Deposit", amount, "Deposit: " + to_string(amount) + " won");
         } catch (const exception& e) {
             cout << "Deposit error: " << e.what() << endl;
         }
@@ -63,17 +64,14 @@ public:
                 throw runtime_error("Insufficient balance.");
             }
             balance -= amount;
-            recordTransaction("Withdrawal: " + to_string(amount) + " won");
+            recordTransaction(to_string(transactionID++), cardNumber, "Withdrawal", amount, "Withdrawal: " + to_string(amount) + " won");
         } catch (const exception& e) {
             cout << "Withdrawal error: " << e.what() << endl;
         }
     }
 
-    void recordTransaction(const string& transaction) {
-        transactionHistory.push_back(transaction);
-    }
     void recordTransaction(string ID, string cdnumber, string types, int amount, string info){
-        transactionHistory.push_back(ID + " " + cdnumber + " " + types + " " + to_string(amount) + " " + info);
+        transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + " " + info);
     }
 
     void printTransactionHistory() {
@@ -83,7 +81,7 @@ public:
         }
     }
 };
-
+Account::transactionID = 1;
 
 class Bank {
 private:
