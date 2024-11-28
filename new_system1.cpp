@@ -71,8 +71,12 @@ public:
         }
     }
 
-    void recordTransaction(string ID, string cdnumber, string types, int amount, string info){
-        transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + " " + info);
+    void recordTransaction(string ID, string cdnumber, string types, double amount, string info){
+        transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "won " + info);
+    }
+    
+    void recordTransaction(string ID, string cdnumber, string types, double amount, string info, string accountinfo){
+        transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "won " + info + " " + accountinfo);
     }
 
     void printTransactionHistory() {
@@ -376,6 +380,7 @@ private:
     Bank* myBank;                       // 주거래 은행
     Account* myAccount;                 // 현재 로그인된 계좌
     static int withdrawalCount;         // 세션당 출금 횟수
+    vector<string> transactionHistory;  // 거래 내역. Account의 거래 내역과는 별도로 저장된다. 이건 스냅샷 용.
     string AdminCard = "admin";         // 관리자 카드 번호
 
 public:
@@ -539,6 +544,7 @@ public:
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
         myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "deposit", denomination * count, "deposit");
+        record
     }
 
     // 출금 함수
@@ -593,7 +599,8 @@ public:
 
             Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
             transfer.performTransaction();
-            myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "transfer", amount, "transfer");
+            myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
+            destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
         } else if (choice == 2) {
             int amount50000, amount10000, amount5000, amount1000;
             int amount = 0;
