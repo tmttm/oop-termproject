@@ -624,9 +624,9 @@ public:
 
         while (true) {
             cout << "Insert your card (card number): ";
-            string accountNumber, password;
-            cin >> accountNumber;
-            if (accountNumber == AdminCard){
+            string cardNumber, password;
+            cin >> cardNumber;
+            if (cardNumber == AdminCard){
                 cout << "Admin mode activated.\n";
                 while(1){
                     cout << "--- Admin Menu ---\n";
@@ -655,7 +655,7 @@ public:
                 cout << "Enter your password: ";
                 cin >> password;
 
-                insert_card(accountNumber, password, banks); // 카드 삽입 및 계좌 인증
+                insert_card(cardNumber, password, banks); // 카드 삽입 및 계좌 인증
 
                 if (isSessionActive()) {
                     char action;
