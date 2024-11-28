@@ -23,6 +23,7 @@ private:
     double balance; // 계좌 잔액
     vector<string> transactionHistory; // 거래 내역
     string mainbank; // 소속 은행 이름
+protected:
     static int transactionID; // 거래 ID
 
 public:
@@ -81,7 +82,7 @@ public:
         }
     }
 };
-Account::transactionID = 1;
+
 
 class Bank {
 private:
