@@ -24,7 +24,6 @@ private:
     double balance; // 계좌 잔액
     vector<string> transactionHistory; // 거래 내역
     string mainbank; // 소속 은행 이름
-protected:
     static int transactionID; // 거래 ID
 
 public:
@@ -40,6 +39,8 @@ public:
     string getAccountNumber() const { return accountNumber; }
 
     string getCardNumber() const { return cardNumber; }
+
+    static int getTransactionID() { return transactionID; }
 
     double getBalance() const { return balance; }
 
@@ -606,8 +607,8 @@ public:
 
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
-        if(languageSetting == "English") myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "deposit", denomination * count, "deposit");
-        else myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "입금", denomination * count, "입금");
+        if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", denomination * count, "deposit");
+        else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", denomination * count, "입금");
         
     }
 
@@ -629,8 +630,8 @@ public:
         // 출금이 성공적으로 수행된 경우에만 카운트 증가
         if (withdraw.isSuccessful()) {
             withdrawalCount++;
-            if(languageSetting == "English") myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
-            else myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "출금", amount, "출금");
+            if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
+            else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금");
         }
     }
 
@@ -671,11 +672,11 @@ public:
             Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
             transfer.performTransaction();
             if(languageSetting == "English") {
-                myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
-                destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
+                destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
             } else {
-                myAccount->recordTransaction(to_string(Account::transactionID), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber());
-                destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber());
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber());
+                destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber());
             }
         } else if (choice == 2) {
             int amount50000, amount10000, amount5000, amount1000;
@@ -711,8 +712,8 @@ public:
             cashInventory[10000] += amount10000;
             cashInventory[5000] += amount5000;
             cashInventory[1000] += amount1000;
-            if(languageSetting == "English") destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "transfer", amount, "transfer");
-            else destAccount->recordTransaction(to_string(Account::transactionID), destAccount->getCardNumber(), "송금", amount, "송금");
+            if(languageSetting == "English") destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer");
+            else destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금");
         }
         
     }
