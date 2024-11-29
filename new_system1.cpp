@@ -9,9 +9,6 @@
 #include <fstream>
 using namespace std;
 
-ofstream fout;
-fout.open("TransactionLog.txt");
-
 string languageSetting = "";
 
 // h2
@@ -40,7 +37,7 @@ public:
 
     string getCardNumber() const { return cardNumber; }
 
-    static int getTransactionID() { return transactionID; }
+    static int getTransactionID() { return transactionID++; }
 
     double getBalance() const { return balance; }
 
@@ -89,6 +86,8 @@ public:
     }
 
     void printTransactionHistory() {
+        ofstream fout;
+        fout.open("transaction_history.txt");
         if(languageSetting == "English") {
             cout << "Transaction History for " << accountNumber << ":" << endl;
             fout << "Transaction History for " << accountNumber << ":" << endl;
@@ -98,12 +97,13 @@ public:
             fout << accountNumber << "의 거래 내역:" << endl;
         }
         for (const string& transaction : transactionHistory) {
-            if(languageSetting == "English") cout << transaction << endl;
-            if(languageSetting == "English") fout << transaction << endl;
+            cout << transaction << endl;
+            fout << transaction << endl;
         }
+        fout.close();
     }
 };
-
+int Account::transactionID = 1;
 
 class Bank {
 private:
@@ -460,9 +460,14 @@ public:
             int atmTypeChoice;
             cin >> atmTypeChoice;
             if (atmTypeChoice == 1 || atmTypeChoice == 2) {
-                type = (atmTypeChoice == 1) ? "Single Bank" : "Multi-Bank";
-                if(languageSetting == "English") cout << "ATM Type set to: " << type << endl;
-                else cout << "ATM 유형이 설정되었습니다: " << type << endl;
+                if (languageSetting == "English"){
+                    type = (atmTypeChoice == 1) ? "Single Bank" : "Multi-Bank";
+                    if(languageSetting == "English") cout << "ATM Type set to: " << type << endl;
+                }
+                else {
+                    type = (atmTypeChoice == 1) ? "단일 은행" : "다중 은행";
+                    cout << "ATM 유형이 설정되었습니다: " << type << endl;
+                }
                 break;
             }
             if(languageSetting == "English") cout << "Invalid selection. Please enter 1 or 2.\n";
@@ -1108,7 +1113,6 @@ int main() {
     for (Bank* bank : banks) {
         delete bank;
     }
-    fout.close();
 
     return 0;
 }
