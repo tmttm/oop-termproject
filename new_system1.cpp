@@ -1029,7 +1029,7 @@ int main() {
             cin >> initialBalance;
             if (initialBalance < 0) {
                 if(languageSetting == "English") cout << "Error: Initial balance cannot be negative. Try again.\n";
-                else: cout << "오류: 초기 잔액은 음수일 수 없습니다. 다시 시도하세요.\n";
+                else cout << "오류: 초기 잔액은 음수일 수 없습니다. 다시 시도하세요.\n";
             } else {
                 break;
             }
