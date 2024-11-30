@@ -443,6 +443,7 @@ private:
     static int withdrawalCount;         // 세션당 출금 횟수
     vector<string> transactionHistory;  // 거래 내역. Account의 거래 내역과는 별도로 저장된다. 이건 스냅샷 용.
     string AdminCard = "admin";         // 관리자 카드 번호
+    int incorrectPasswordAttempts;
 
 public:
     ATM() : sessionActive(false), myBank(nullptr), myAccount(nullptr) {}
@@ -551,7 +552,7 @@ public:
         return cashInventory;
     }
 
-    void insert_card(const string& cardNumber, const string& password, vector<Bank*>& banks, int& incorrectPasswordAttempts) {
+    void insert_card(const string& cardNumber, const string& password, vector<Bank*>& banks) {
         bool authenticated = false;
 
         if (type == "Single Bank" || type == "단일 은행") {
@@ -867,7 +868,7 @@ public:
     }
 
     void runATM(vector<ATM>& atms, vector<Bank*>& banks) {
-        int incorrectPasswordAttempts = 0; // 잘못된 비밀번호 시도 횟수
+        incorrectPasswordAttempts = 0; // 잘못된 비밀번호 시도 횟수
 
         while (true) {
             if (languageSetting == "English") cout << "Insert your card (card number): ";
@@ -910,7 +911,7 @@ public:
                 else cout << "비밀번호를 입력하세요: ";
                 cin >> password;
 
-                insert_card(cardNumber, password, banks, incorrectPasswordAttempts);
+                insert_card(cardNumber, password, banks);
 
                 if (incorrectPasswordAttempts >= 3) {
                     if (languageSetting == "English") cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
