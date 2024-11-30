@@ -224,10 +224,11 @@ private:
     int count; // 입금할 지폐의 개수
     int depositLimitCash = 50; // 현금 입금 한도
     double minimumCheckAmount = 100000; // 수표 입금 최소 금액
+    bool successful; // 입금 성공 여부
 
 public:
     Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, int denom, int cnt)
-        : Trans(acc, bnk, fees), cashInventory(cashInv), denomination(denom), count(cnt) {}
+        : Trans(acc, bnk, fees), cashInventory(cashInv), denomination(denom), count(cnt), successful(false) {}
 
     string calculateFees() {
         return (account->getBankName() == bank->getName()) ? "deposit_primary" : "deposit_non_primary";
@@ -246,6 +247,7 @@ public:
         if (account->getBalance() >= fee) {
             account->addFunds(totalAmount - fee);
             cashInventory[denomination] += count;
+            successful = true; // 입금 성공 여부 설정
             if(languageSetting == "English") {
                 cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
                 cout << "Deposit fee of " << fee << " won applied." << endl;
@@ -270,6 +272,7 @@ public:
         int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
         if (account->getBalance() >= fee) {
             account->addFunds(amount - fee);
+            successful = true; // 입금 성공 여부 설정
             if(languageSetting == "English") {
                 cout << "Deposited check of " << amount << " won to the account." << endl;
                 cout << "Deposit fee of " << fee << " won applied." << endl;
@@ -285,7 +288,6 @@ public:
     }
 
     void performTransaction() override {
-        // 현재 기능은 입금 유형에 따라 적절한 메서드 호출을 명시적으로 실행해야 함.
         if(languageSetting == "English") cout << "Choose deposit type: \n1. Cash \n2. Check\n";
         else cout << "입금 유형을 선택하세요: \n1. 현금 \n2. 수표\n";
         int choice;
@@ -318,8 +320,9 @@ public:
             else cout << "잘못된 입금 유형이 선택되었습니다.\n";
         }
     }
-};
 
+    bool isSuccessful() const { return successful; }
+};
 
 // 출금 (Withdraw) 클래스
 class Withdraw : public Trans {
@@ -392,10 +395,11 @@ class Transfer : public Trans {
 private:
     Account* destinationAccount; // 송금 대상 계좌
     double amount; // 송금 금액
+    bool successful; // 송금 성공 여부
 
 public:
     Transfer(Account* srcAcc, Bank* bnk, unordered_map<string, int>& fees, Account* destAcc, double amt)
-        : Trans(srcAcc, bnk, fees), destinationAccount(destAcc), amount(amt) {}
+        : Trans(srcAcc, bnk, fees), destinationAccount(destAcc), amount(amt), successful(false) {}
 
     string calculateFees(const string& destBankName) {
         if (account->getBankName() == bank->getName() && destBankName == bank->getName()) {
@@ -419,11 +423,13 @@ public:
 
         account->deductFunds(amount + fee); // 송금 계좌에서 금액 차감
         destinationAccount->addFunds(amount); // 대상 계좌에 금액 추가
+        successful = true; // 송금 성공 여부 설정
         if(languageSetting == "English") cout << "Transfer successful! Amount: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
         else cout << "송금 성공! 금액: " << amount << "원. 수수료: " << fee << "원.\n";
     }
-};
 
+    bool isSuccessful() const { return successful; }
+};
 
 class ATM {
 private:
