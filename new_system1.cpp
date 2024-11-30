@@ -9,7 +9,6 @@
 #include <fstream>
 using namespace std;
 
-ofstream fout("transaction_history.txt");
 
 // h2
 class Account {
@@ -86,6 +85,8 @@ public:
     }
 
     void printTransactionHistory(string languageSetting) {
+        ofstream fout;
+        fout.open("transaction_history.txt");
         if(languageSetting == "English") {
             cout << "Transaction History for " << accountNumber << ":" << endl;
             fout << "Transaction History for " << accountNumber << ":" << endl;
