@@ -843,8 +843,15 @@ public:
             amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
             amount -= transactionFees["cash_transfer"];
 
-            // 거래 성공 시
-            if (amount > 0) {
+            if (amount50000 < 0 || amount10000 < 0 || amount5000 < 0 || amount1000 < 0) {
+                if(getLanguage() == "English") cout << "Invalid input. Bills cannot be negative.\n";
+                else cout << "잘못된 입력입니다. 지폐 수량은 음수일 수 없습니다.\n";
+            }
+            else if (amount50000+amount10000+amount5000+amount1000 == 0) {
+                if(getLanguage() == "English") cout << "Error: No cash inserted.\n";
+                else cout << "오류: 현금이 넣어지지 않았습니다.\n";
+            }
+            else if (amount > 0) {
                 if(getLanguage() == "English") {
                     cout << "You transferred " << amount << " won to " << destAccountNumber << ". Transfer fee " << transactionFees["cash_transfer"] << " was paid." << endl;
                     transactionHistory.push_back("Cash Transfer: " + to_string(amount) + " won to " + destAccountNumber);
@@ -1187,6 +1194,7 @@ int main() {
     for (Bank* bank : banks) {
         delete bank;
     }
+    fout.close();
 
     return 0;
 }
