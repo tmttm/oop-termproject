@@ -120,8 +120,7 @@ public:
     // 계좌 생성 (createAccount)
     void createAccount(const string& userName, const string& accountNumber, const string& cardNumber, const string& password, double initialBalance) {
         accounts[cardNumber] = Account(userName, accountNumber, cardNumber, password, initialBalance, name);
-        if(languageSetting == "English") cout << "Account successfully created: " << accountNumber << endl;
-        else cout << "계좌가 성공적으로 생성되었습니다: " << accountNumber << endl;
+        cout << "Account successfully created: " << accountNumber << endl;
     }
 
     // 계좌 검색
@@ -143,7 +142,7 @@ public:
     }    
 
     // 비밀번호 검증
-    bool verifyPassword(const string& cardNumber, const string& password) {
+    bool verifyPassword(const string& cardNumber, const string& password, string languageSetting) {
         try {
             Account* account = getAccount(cardNumber);
             if (!account) {
@@ -159,7 +158,7 @@ public:
     }
 
     // 계좌 간 송금
-    void transferBetweenAccounts(const string& sourceAccount, const string& destinationAccount, double amount) {
+    void transferBetweenAccounts(const string& sourceAccount, const string& destinationAccount, double amount, string languageSetting) {
         try {
             Account* srcAcc = getAccount(sourceAccount);
             Account* destAcc = getAccount(destinationAccount);
@@ -174,8 +173,8 @@ public:
                 else throw invalid_argument("송금 금액은 0보다 커야 합니다.");
             }
 
-            srcAcc->deductFunds(amount);
-            destAcc->addFunds(amount);
+            srcAcc->deductFunds(amount, languageSetting);
+            destAcc->addFunds(amount, languageSetting);
 
             if(languageSetting == "English") cout << "송금 완료: " << sourceAccount << "에서 " << destinationAccount << "로 " << amount << "원이 송금되었습니다." << endl;
             else cout << "Transferred " << amount << " won from " << sourceAccount << " to " << destinationAccount << "." << endl;
@@ -186,7 +185,7 @@ public:
     }
 
     // 모든 계좌 정보 출력
-    void printAllAccounts() const {
+    void printAllAccounts(string languageSetting) const {
         if(languageSetting == "English") cout << "Bank: " << name << " - Account List" << endl;
         else cout << "은행: " << name << " - 계좌 목록" << endl;
         for (const auto& pair : accounts) {
@@ -214,6 +213,7 @@ public:
         : account(acc), bank(bnk), transactionFees(fees), languageSetting(language) {}
 
     virtual void performTransaction() = 0; // 순수 가상 함수
+    string getLanguage() const { return languageSetting; }
 };
 
 // 입금 (Deposit) 클래스
@@ -236,7 +236,7 @@ public:
 
     void depositCash(int denomination, int count) {
         if (count > depositLimitCash) {
-            if(languageSetting == "English") cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
+            if(getLanguage() == "English") cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
             else cout << "현금 입금 한도인 " << depositLimitCash << "장을 초과했습니다." << endl;
             return;
         }
@@ -245,10 +245,10 @@ public:
         int fee = transactionFees[calculateFees()];
 
         if (account->getBalance() >= fee) {
-            account->addFunds(totalAmount - fee);
+            account->addFunds(totalAmount - fee, getLanguage());
             cashInventory[denomination] += count;
             successful = true; // 입금 성공 여부 설정
-            if(languageSetting == "English") {
+            if(getLanguage() == "English") {
                 cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
                 cout << "Deposit fee of " << fee << " won applied." << endl;
             }
@@ -257,7 +257,7 @@ public:
                 cout << "입금 수수료 " << fee << "원이 적용되었습니다." << endl;
             }
         } else {
-            if(languageSetting == "English") cout << "Insufficient funds for deposit fee." << endl;
+            if(getLanguage() == "English") cout << "Insufficient funds for deposit fee." << endl;
             else cout << "입금 수수료를 지불할 잔액이 부족합니다." << endl;
         }
     }
@@ -271,7 +271,7 @@ public:
 
         int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
         if (account->getBalance() >= fee) {
-            account->addFunds(amount - fee);
+            account->addFunds(amount - fee, getLanguage());
             successful = true; // 입금 성공 여부 설정
             if(languageSetting == "English") {
                 cout << "Deposited check of " << amount << " won to the account." << endl;
@@ -374,7 +374,7 @@ public:
             return;
         }
 
-        account->deductFunds(totalAmount); // 계좌에서 총 출금 금액 차감
+        account->deductFunds(totalAmount, getLanguage()); // 계좌에서 총 출금 금액 차감
         successful = true; // 출금 성공 여부 설정
 
         if(languageSetting == "English") cout << "Withdrawal successful! Dispensed: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
@@ -421,8 +421,8 @@ public:
             return;
         }
 
-        account->deductFunds(amount + fee); // 송금 계좌에서 금액 차감
-        destinationAccount->addFunds(amount); // 대상 계좌에 금액 추가
+        account->deductFunds(amount + fee, getLanguage()); // 송금 계좌에서 금액 차감
+        destinationAccount->addFunds(amount, getLanguage()); // 대상 계좌에 금액 추가
         successful = true; // 송금 성공 여부 설정
         if(languageSetting == "English") cout << "Transfer successful! Amount: " << amount << " KRW. Fee applied: " << fee << " KRW.\n";
         else cout << "송금 성공! 금액: " << amount << "원. 수수료: " << fee << "원.\n";
@@ -598,7 +598,7 @@ public:
                     // 잘못된 카드 번호
                     if (getLanguage() == "English") cout << "Authentication failed. Invalid card number. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
                     else cout << "인증 실패. 잘못된 카드 번호입니다. 이 ATM은 주 은행 (" << myBank->getName() << ")의 카드만 허용합니다.\n";
-                } else if (!myBank->verifyPassword(cardNumber, password)) {
+                } else if (!myBank->verifyPassword(cardNumber, password, getLanguage())) {
                     // 잘못된 비밀번호
                     incorrectPasswordAttempts++;
                     if (getLanguage() == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
@@ -623,7 +623,7 @@ public:
                 if (!bank->getAccount(cardNumber)) {
                     // 잘못된 카드 번호
                     continue;
-                } else if (!bank->verifyPassword(cardNumber, password)) {
+                } else if (!bank->verifyPassword(cardNumber, password, getLanguage())) {
                     // 잘못된 비밀번호
                     incorrectPasswordAttempts++;
                     if (getLanguage() == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
@@ -719,7 +719,7 @@ public:
     void deposit() {
         int denomination, count;
 
-        Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
+        Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count, getLanguage());
         deposit.performTransaction();
         
         // 거래 성공 시
@@ -743,7 +743,7 @@ public:
         else cout << "출금할 금액을 입력하세요: ";
         cin >> amount;
 
-        Withdraw withdraw(myAccount, myBank, transactionFees, cashInventory, amount);
+        Withdraw withdraw(myAccount, myBank, transactionFees, cashInventory, amount, getLanguage());
         withdraw.performTransaction();
 
         // 거래 성공 시
@@ -801,7 +801,7 @@ public:
             else cout << "송금 금액을 입력하세요: ";
             cin >> amount;
 
-            Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
+            Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount, getLanguage());
             transfer.performTransaction();
 
             // 거래 성공 시
@@ -853,7 +853,7 @@ public:
                     cout << amount << "원을 " << destAccountNumber << "에게 송금했습니다. 송금 수수료 " << transactionFees["cash_transfer"] << "원이 부과되었습니다." << endl;
                     transactionHistory.push_back("현금 송금: " + to_string(amount) + " 원 -> " + destAccountNumber);
                 }
-                destAccount->addFunds(amount);
+                destAccount->addFunds(amount, getLanguage());
                 cashInventory[50000] += amount50000;
                 cashInventory[10000] += amount10000;
                 cashInventory[5000] += amount5000;
