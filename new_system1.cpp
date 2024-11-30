@@ -936,6 +936,7 @@ public:
                             }
                         }
                     } else if (adminChoice == 2) {
+                        return;
                         break;
                     } else {
                         if (getLanguage() == "English") cout << "Invalid choice. Try again.\n";
