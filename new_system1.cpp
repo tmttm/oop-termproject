@@ -545,50 +545,64 @@ public:
         return cashInventory;
     }
 
-    void insert_card(const string& cardNumber, const string& password, vector<Bank*>& banks) {
+    void insert_card(const string& cardNumber, const string& password, vector<Bank*>& banks, int& incorrectPasswordAttempts) {
         bool authenticated = false;
 
         if (type == "Single Bank" || type == "단일 은행") {
-            // Single Bank ATM: 주거래 은행의 카드만 허용
             if (myBank) {
-                // 주거래 은행에서 계좌 확인 및 인증
-                if (myBank->getAccount(cardNumber) && myBank->verifyPassword(cardNumber, password)) {
+                if (!myBank->getAccount(cardNumber)) {
+                    // 잘못된 카드 번호
+                    if (languageSetting == "English") cout << "Authentication failed. Invalid card number. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
+                    else cout << "인증 실패. 잘못된 카드 번호입니다. 이 ATM은 주 은행 (" << myBank->getName() << ")의 카드만 허용합니다.\n";
+                } else if (!myBank->verifyPassword(cardNumber, password)) {
+                    // 잘못된 비밀번호
+                    incorrectPasswordAttempts++;
+                    if (languageSetting == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+                    else cout << "인증 실패. 비밀번호가 틀렸습니다. 남은 시도 횟수: " << (3 - incorrectPasswordAttempts) << endl;
+                } else {
+                    // 인증 성공
                     sessionActive = true;
                     myAccount = myBank->getAccount(cardNumber);
                     authenticated = true;
-                    if(languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Single Bank ATM.\n";
+                    if (languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Single Bank ATM.\n";
                     else cout << "ATM 시리얼 번호 " << serialNumber << "에 대한 세션이 시작되었습니다. (단일 은행 ATM)\n";
-                    if(languageSetting == "English") cout << "Hello, " << myAccount->getUserName() << "!\n";
+                    if (languageSetting == "English") cout << "Hello, " << myAccount->getUserName() << "!\n";
                     else cout << myAccount->getUserName() << "님 안녕하세요!\n";
-                } else {
-                    if(languageSetting == "English") cout << "Authentication failed. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
-                    else cout << "인증 실패. 이 ATM은 주 은행 (" << myBank->getName() << ")의 카드만 허용합니다.\n";
+                    incorrectPasswordAttempts = 0; // 인증 성공 시 시도 횟수 초기화
                 }
             } else {
-                if(languageSetting == "English") cout << "Error: This ATM does not have a valid primary bank configuration.\n";
+                if (languageSetting == "English") cout << "Error: This ATM does not have a valid primary bank configuration.\n";
                 else cout << "오류: 이 ATM에는 유효한 주 은행 구성이 없습니다.\n";
             }
-        } 
-        else if (type == "Multi-Bank" || type == "다중 은행") {
-            // Multi-Bank ATM: 모든 은행의 카드 허용
+        } else if (type == "Multi-Bank" || type == "다중 은행") {
             for (Bank* bank : banks) {
-                if (bank->getAccount(cardNumber) && bank->verifyPassword(cardNumber, password)) {
+                if (!bank->getAccount(cardNumber)) {
+                    // 잘못된 카드 번호
+                    continue;
+                } else if (!bank->verifyPassword(cardNumber, password)) {
+                    // 잘못된 비밀번호
+                    incorrectPasswordAttempts++;
+                    if (languageSetting == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+                    else cout << "인증 실패. 비밀번호가 틀렸습니다. 남은 시도 횟수: " << (3 - incorrectPasswordAttempts) << endl;
+                    return; // 잘못된 비밀번호면 더 이상 탐색하지 않음
+                } else {
+                    // 인증 성공
                     sessionActive = true;
                     myAccount = bank->getAccount(cardNumber);
                     authenticated = true;
-                    if(languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Multi-Bank ATM.\n";
+                    if (languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Multi-Bank ATM.\n";
                     else cout << "ATM 시리얼 번호 " << serialNumber << "에 대한 세션이 시작되었습니다. (다중 은행 ATM)\n";
+                    incorrectPasswordAttempts = 0; // 인증 성공 시 시도 횟수 초기화
                     break;
                 }
             }
-            
+
             if (!authenticated) {
-                if(languageSetting == "English") cout << "Authentication failed. Please check your account number or password.\n";
-                else cout << "인증 실패. 계좌 번호 또는 비밀번호를 확인하세요.\n";
+                if (languageSetting == "English") cout << "Authentication failed. Invalid card number. Please try again.\n";
+                else cout << "인증 실패. 잘못된 카드 번호입니다. 다시 시도하세요.\n";
             }
-        }
-        else {
-            if(languageSetting == "English") cout << "Error: Invalid ATM type.\n";
+        } else {
+            if (languageSetting == "English") cout << "Error: Invalid ATM type.\n";
             else cout << "오류: 잘못된 ATM 유형입니다.\n";
         }
     }
@@ -620,11 +634,6 @@ public:
 
     // 출금 함수
     void withdraw() {
-        if (withdrawalCount >= 3) { // 세션당 출금 횟수 제한 검사
-            if(languageSetting == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
-            else cout << "오류: 세션 당 최대 3회의 출금만 허용됩니다. 더 많이 출금하려면 세션을 종료하세요.\n";
-            end_session();
-        }
         double amount;
         if(languageSetting == "English") cout << "Enter amount to withdraw: ";
         else cout << "출금할 금액을 입력하세요: ";
@@ -636,6 +645,7 @@ public:
         // 출금이 성공적으로 수행된 경우에만 카운트 증가
         if (withdraw.isSuccessful()) {
             withdrawalCount++;
+            cout << "출금 제한이 " << 3 - withdrawalCount << "번 남았습니다." << endl;
             if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
             else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금");
         }
@@ -761,30 +771,31 @@ public:
         }
     }
 
-    // ATM 실행 (메뉴 인터페이스)
     void runATM(vector<ATM>& atms, vector<Bank*>& banks) {
         int incorrectPasswordAttempts = 0; // 잘못된 비밀번호 시도 횟수
 
         while (true) {
-            if(languageSetting == "English") cout << "Insert your card (card number): ";
+            if (languageSetting == "English") cout << "Insert your card (card number): ";
             else cout << "카드를 넣어주세요 (카드 번호): ";
             string cardNumber, password;
             cin >> cardNumber;
-            if (cardNumber == AdminCard){
-                if(languageSetting == "English") cout << "Admin mode activated.\n";
+
+            if (cardNumber == AdminCard) {
+                if (languageSetting == "English") cout << "Admin mode activated.\n";
                 else cout << "관리자 모드가 활성화되었습니다.\n";
-                while(1){
-                    if(languageSetting == "English") {
+
+                while (true) {
+                    if (languageSetting == "English") {
                         cout << "--- Admin Menu ---\n";
                         cout << "1. Transaction history\n2. Exit\n";
-                    }
-                    else{
+                    } else {
                         cout << "--- 관리자 메뉴 ---\n";
                         cout << "1. 거래 내역\n2. 종료\n";
                     }
+
                     int adminChoice;
                     cin >> adminChoice;
-                    if (adminChoice == 1){
+                    if (adminChoice == 1) {
                         for (const auto& pair : banks) {
                             unordered_map<string, Account> accounts = pair->getAllAccounts();
                             for (const auto& pair : accounts) {
@@ -792,34 +803,34 @@ public:
                                 account.printTransactionHistory();
                             }
                         }
+                    } else if (adminChoice == 2) {
                         break;
-                    }
-                    else if (adminChoice == 2){
-                        break;
-                    }
-                    else{
-                        if(languageSetting == "English") cout << "Invalid choice. Try again.\n";
+                    } else {
+                        if (languageSetting == "English") cout << "Invalid choice. Try again.\n";
                         else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
                     }
                 }
-            }
-            else {
-                if(languageSetting == "English") cout << "Enter your password: ";
+            } else {
+                if (languageSetting == "English") cout << "Enter your password: ";
                 else cout << "비밀번호를 입력하세요: ";
                 cin >> password;
 
-                insert_card(cardNumber, password, banks); // 카드 삽입 및 계좌 인증
+                insert_card(cardNumber, password, banks, incorrectPasswordAttempts);
+
+                if (incorrectPasswordAttempts >= 3) {
+                    if (languageSetting == "English") cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
+                    else cout << "너무 많은 잘못된 시도. 세션이 중단되었습니다. 카드가 반환됩니다.\n";
+                    return; // 프로그램 종료
+                }
 
                 if (isSessionActive()) {
-                    incorrectPasswordAttempts = 0;
                     char action;
                     do {
-                        if(languageSetting == "English") {
+                        if (languageSetting == "English") {
                             cout << "\n--- ATM Menu ---\n";
                             cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Cancel\n/. Display Snapshot\n";
                             cout << "Select an action: ";
-                        }
-                        else{
+                        } else {
                             cout << "\n--- ATM 메뉴 ---\n";
                             cout << "1. 입금\n2. 출금\n3. 송금\n4. 취소\n/. 스냅샷 출력\n";
                             cout << "원하는 작업을 선택하세요: ";
@@ -827,42 +838,36 @@ public:
                         cin >> action;
 
                         switch (action) {
-                            case '1': 
-                                deposit(); // 입금 함수 호출
+                            case '1':
+                                deposit();
                                 break;
-                            case '2': 
-                                withdraw(); // 출금 함수 호출
+                            case '2':
+                                if (withdrawalCount >= 3) {
+                                    if (languageSetting == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
+                                    else cout << "오류: 세션 당 최대 3회의 출금만 허용됩니다. 더 많이 출금하려면 세션을 종료하세요.\n";
+                                    end_session();
+                                } else {
+                                    withdraw();
+                                }
                                 break;
-                            case '3': 
-                                transferFunds(banks); // 송금 함수 호출
+                            case '3':
+                                transferFunds(banks);
                                 break;
-                            case '4': 
-                                end_session(); // 세션 종료
+                            case '4':
+                                end_session();
                                 break;
-                            case '/': 
-                                displaySnapshot(atms, banks); // 스냅샷 출력
+                            case '/':
+                                displaySnapshot(atms, banks);
                                 break;
                             default:
-                                if(languageSetting == "English") cout << "Invalid choice. Try again.\n";
+                                if (languageSetting == "English") cout << "Invalid choice. Try again.\n";
                                 else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
                         }
-                    } while (action != '4' || isSessionActive());
-                }
-                else {
-                    incorrectPasswordAttempts++;
-                    if(languageSetting == "English") cout << "Authentication failed. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
-                    else cout << "인증 실패. 남은 시도 횟수: " << (3 - incorrectPasswordAttempts) << endl;
-
-                    if (incorrectPasswordAttempts == 3) {
-                        if(languageSetting == "English") cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
-                        else cout << "너무 많은 잘못된 시도. 세션이 중단되었습니다. 카드가 반환됩니다.\n";
-                        return;
-                    }
+                    } while (action != '4' && isSessionActive());
                 }
             }
         }
     }
-};
 int ATM::withdrawalCount = 0;
 
 void setLanguage(){
