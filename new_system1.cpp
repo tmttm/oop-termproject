@@ -629,13 +629,23 @@ public:
 
     // 입금 함수
     void deposit() {
-        int denomination, count;      
+        int denomination, count;
 
         Deposit deposit(myAccount, myBank, transactionFees, cashInventory, denomination, count);
         deposit.performTransaction();
-        if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", denomination * count, "deposit");
-        else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", denomination * count, "입금");
         
+        // 거래 성공 시
+        if (deposit.isSuccessful()) {
+            double amount = denomination * count;
+            if (languageSetting == "English") {
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", amount, "deposit");
+            } else {
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", amount, "입금");
+            }
+            // 세션별 거래 기록
+            string record = to_string(myAccount->getTransactionID()) + " : " + myAccount->getCardNumber() + " deposit " + to_string(amount) + " won";
+            transactionHistory.push_back(record);
+        }
     }
 
     // 출금 함수
@@ -647,13 +657,24 @@ public:
 
         Withdraw withdraw(myAccount, myBank, transactionFees, cashInventory, amount);
         withdraw.performTransaction();
-    
-        // 출금이 성공적으로 수행된 경우에만 카운트 증가
+
+        // 거래 성공 시
         if (withdraw.isSuccessful()) {
             withdrawalCount++;
-            cout << "출금 제한이 " << 3 - withdrawalCount << "번 남았습니다." << endl;
+
+            // 출금 제한 메시지 출력
+            if (languageSetting == "English") {
+                cout << "You can withdraw " << (3 - withdrawalCount) << " more time(s) during this session." << endl;
+            } else {
+                cout << "이 세션에서 " << (3 - withdrawalCount) << "번 더 출금할 수 있습니다." << endl;
+            }
+
             if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
             else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금");
+
+            // 세션별 거래 기록
+            if(languageSetting == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won");
+            else transactionHistory.push_back("출금: " + to_string(amount) + " 원");
         }
     }
 
@@ -685,6 +706,7 @@ public:
             else cout << "목적지 계좌를 찾을 수 없습니다.\n";
             return;
         }
+
         if (choice == 1) {
             double amount;
             if(languageSetting == "English") cout << "Enter transfer amount: ";
@@ -693,12 +715,18 @@ public:
 
             Transfer transfer(myAccount, myBank, transactionFees, destAccount, amount);
             transfer.performTransaction();
-            if(languageSetting == "English") {
-                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
-                destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
-            } else {
-                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber());
-                destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber());
+
+            // 거래 성공 시
+            if (transfer.isSuccessful()) {
+                if(languageSetting == "English") {
+                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
+                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
+                    transactionHistory.push_back("Account Transfer: " + to_string(amount) + " won to " + destAccountNumber);
+                } else {
+                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber());
+                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber());
+                    transactionHistory.push_back("계좌 송금: " + to_string(amount) + " 원 -> " + destAccountNumber);
+                }
             }
         } else if (choice == 2) {
             int amount50000, amount10000, amount5000, amount1000;
@@ -727,17 +755,28 @@ public:
             }
             amount = amount50000*50000 + amount10000*10000 + amount5000*5000 + amount1000*1000;
             amount -= transactionFees["cash_transfer"];
-            if(languageSetting == "English") cout << "You transfered " << amount << "won to " << destAccountNumber << ". Transfer fee" << transactionFees["cash_transfer"] << "was paid." << endl;
-            else cout << amount << "원을 " << destAccountNumber << "에게 송금했습니다. 송금 수수료" << transactionFees["cash_transfer"] << "원이 부과되었습니다." << endl;
-            destAccount->addFunds(amount);
-            cashInventory[50000] += amount50000;
-            cashInventory[10000] += amount10000;
-            cashInventory[5000] += amount5000;
-            cashInventory[1000] += amount1000;
-            if(languageSetting == "English") destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer");
-            else destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금");
+
+            // 거래 성공 시
+            if (amount > 0) {
+                if(languageSetting == "English") {
+                    cout << "You transferred " << amount << " won to " << destAccountNumber << ". Transfer fee " << transactionFees["cash_transfer"] << " was paid." << endl;
+                    transactionHistory.push_back("Cash Transfer: " + to_string(amount) + " won to " + destAccountNumber);
+                } else {
+                    cout << amount << "원을 " << destAccountNumber << "에게 송금했습니다. 송금 수수료 " << transactionFees["cash_transfer"] << "원이 부과되었습니다." << endl;
+                    transactionHistory.push_back("현금 송금: " + to_string(amount) + " 원 -> " + destAccountNumber);
+                }
+                destAccount->addFunds(amount);
+                cashInventory[50000] += amount50000;
+                cashInventory[10000] += amount10000;
+                cashInventory[5000] += amount5000;
+                cashInventory[1000] += amount1000;
+                if(languageSetting == "English") destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer");
+                else destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금");
+            } else {
+                if(languageSetting == "English") cout << "Error: Insufficient amount after fees for cash transfer.\n";
+                else cout << "오류: 수수료를 제외하고 남은 금액이 부족합니다.\n";
+            }
         }
-        
     }
 
     void displaySnapshot(const vector<ATM>& atms, const vector<Bank*>& banks) {
