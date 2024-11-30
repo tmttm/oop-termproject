@@ -548,7 +548,7 @@ public:
     void insert_card(const string& cardNumber, const string& password, vector<Bank*>& banks) {
         bool authenticated = false;
 
-        if (type == "Single Bank") {
+        if (type == "Single Bank" || type == "단일 은행") {
             // Single Bank ATM: 주거래 은행의 카드만 허용
             if (myBank) {
                 // 주거래 은행에서 계좌 확인 및 인증
@@ -569,7 +569,7 @@ public:
                 else cout << "오류: 이 ATM에는 유효한 주 은행 구성이 없습니다.\n";
             }
         } 
-        else if (type == "Multi-Bank") {
+        else if (type == "Multi-Bank" || type == "다중 은행") {
             // Multi-Bank ATM: 모든 은행의 카드 허용
             for (Bank* bank : banks) {
                 if (bank->getAccount(cardNumber) && bank->verifyPassword(cardNumber, password)) {
@@ -586,7 +586,8 @@ public:
                 if(languageSetting == "English") cout << "Authentication failed. Please check your account number or password.\n";
                 else cout << "인증 실패. 계좌 번호 또는 비밀번호를 확인하세요.\n";
             }
-        } else {
+        }
+        else {
             if(languageSetting == "English") cout << "Error: Invalid ATM type.\n";
             else cout << "오류: 잘못된 ATM 유형입니다.\n";
         }
