@@ -846,6 +846,7 @@ public:
                                     if (languageSetting == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
                                     else cout << "오류: 세션 당 최대 3회의 출금만 허용됩니다. 더 많이 출금하려면 세션을 종료하세요.\n";
                                     end_session();
+                                    return;
                                 } else {
                                     withdraw();
                                 }
@@ -855,6 +856,7 @@ public:
                                 break;
                             case '4':
                                 end_session();
+                                return;
                                 break;
                             case '/':
                                 displaySnapshot(atms, banks);
