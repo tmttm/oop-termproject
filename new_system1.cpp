@@ -868,6 +868,7 @@ public:
             }
         }
     }
+};
 int ATM::withdrawalCount = 0;
 
 void setLanguage(){
