@@ -616,14 +616,64 @@ public:
     // 세션 종료
     void end_session() {
         if (sessionActive) {
-            sessionActive = false;
-            if(languageSetting == "English") cout << "Session ended. Please take your card." << endl;
-            else cout << "세션이 종료되었습니다. 카드를 가져가세요." << endl;
-            myAccount = nullptr;
+            sessionActive = false; // 세션 비활성화
+            cout << "\n--- Session Summary ---\n";
+
+            if (myAccount) {
+                // 계좌 정보 출력
+                if (languageSetting == "English") {
+                    cout << "Card Number: " << myAccount->getCardNumber() << "\n";
+                    cout << "Account Number: " << myAccount->getAccountNumber() << "\n";
+                    cout << "User Name: " << myAccount->getUserName() << "\n\n";
+                    cout << "Transactions:\n";
+                } else {
+                    cout << "카드 번호: " << myAccount->getCardNumber() << "\n";
+                    cout << "계좌 번호: " << myAccount->getAccountNumber() << "\n";
+                    cout << "사용자 이름: " << myAccount->getUserName() << "\n\n";
+                    cout << "거래 내역:\n";
+                }
+
+                // 세션별 거래 내역 출력
+                if (transactionHistory.empty()) {
+                    if (languageSetting == "English") {
+                        cout << "No transactions were completed during this session.\n";
+                    } else {
+                        cout << "세션 동안 완료된 거래가 없습니다.\n";
+                    }
+                }
+                
+                else {
+                    for (const string& transaction : transactionHistory) {
+                        cout << transaction << "\n";
+                    }
+
+                    if (languageSetting == "English") {
+                        cout << "\nTotal Transactions: " << transactionHistory.size() << "\n";
+                    } else {
+                        cout << "\n총 거래 수: " << transactionHistory.size() << "\n";
+                    }
+                }
+            }
+
+            // 세션 종료 메시지
+            if (languageSetting == "English") {
+                cout << "\nThank you for using the ATM. Take your card.\n";
+            } else {
+                cout << "\nATM을 이용해 주셔서 감사합니다.당신의 카드를 받으세요.\n";
+            }
+
+            transactionHistory.clear();
             withdrawalCount = 0;
-        } else {
-            if(languageSetting == "English") cout << "No active session to end.\n";
-            else cout << "종료할 세션이 없습니다.\n";
+            myAccount = nullptr;
+        }
+        
+        else {
+            // 세션이 활성 상태가 아닌 경우
+            if (languageSetting == "English") {
+                cout << "No active session to end.\n";
+            } else {
+                cout << "종료할 세션이 없습니다.\n";
+            }
         }
     }
 
