@@ -9,7 +9,6 @@
 #include <fstream>
 using namespace std;
 
-string languageSetting = "";
 
 // h2
 class Account {
@@ -43,7 +42,7 @@ public:
 
     bool verifyPassword(const string& pw) const { return password == pw; }
 
-    void addFunds(double amount) {
+    void addFunds(double amount, string languageSetting) {
         try {
             if (amount < 0) {
                 if(languageSetting == "English") throw invalid_argument("Deposit amount cannot be negative.");
@@ -57,7 +56,7 @@ public:
         }
     }
 
-    void deductFunds(double amount) {
+    void deductFunds(double amount, string languageSetting) {
         try {
             if (amount < 0) {
                 if(languageSetting == "English") throw invalid_argument("Withdrawal amount cannot be negative.");
@@ -75,17 +74,17 @@ public:
         }
     }
 
-    void recordTransaction(string ID, string cdnumber, string types, double amount, string info){
+    void recordTransaction(string ID, string cdnumber, string types, double amount, string info, string languageSetting){
         if(languageSetting == "English") transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "won " + info);
         else transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "원 " + info);
     }
     
-    void recordTransaction(string ID, string cdnumber, string types, double amount, string info, string accountinfo){
+    void recordTransaction(string ID, string cdnumber, string types, double amount, string info, string accountinfo, string languageSetting){
         if(languageSetting == "English") transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "won " + info + " " + accountinfo);
         else transactionHistory.push_back(ID + " : " + cdnumber + " " + types + " " + to_string(amount) + "원 " + info + " " + accountinfo);
     }
 
-    void printTransactionHistory() {
+    void printTransactionHistory(string languageSetting) {
         ofstream fout;
         fout.open("transaction_history.txt");
         if(languageSetting == "English") {
@@ -208,10 +207,11 @@ protected:
     Account* account; // 계좌 객체
     Bank* bank; // 관련된 은행 객체
     unordered_map<string, int>& transactionFees; // 수수료 맵
+    string languageSetting;
 
 public:
-    Trans(Account* acc, Bank* bnk, unordered_map<string, int>& fees)
-        : account(acc), bank(bnk), transactionFees(fees) {}
+    Trans(Account* acc, Bank* bnk, unordered_map<string, int>& fees, string language)
+        : account(acc), bank(bnk), transactionFees(fees), languageSetting(language) {}
 
     virtual void performTransaction() = 0; // 순수 가상 함수
 };
@@ -227,8 +227,8 @@ private:
     bool successful; // 입금 성공 여부
 
 public:
-    Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, int denom, int cnt)
-        : Trans(acc, bnk, fees), cashInventory(cashInv), denomination(denom), count(cnt), successful(false) {}
+    Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, int denom, int cnt, string language)
+        : Trans(acc, bnk, fees, language), cashInventory(cashInv), denomination(denom), count(cnt), successful(false) {}
 
     string calculateFees() {
         return (account->getBankName() == bank->getName()) ? "deposit_primary" : "deposit_non_primary";
@@ -332,8 +332,8 @@ private:
     bool successful; // 출금 성공 여부
 
 public:
-    Withdraw(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, double amt)
-        : Trans(acc, bnk, fees), cashInventory(cashInv), amount(amt), successful(false) {}
+    Withdraw(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, double amt, string language)
+        : Trans(acc, bnk, fees, language), cashInventory(cashInv), amount(amt), successful(false) {}
 
     string calculateFees() {
         return (account->getBankName() == bank->getName()) ? "withdrawal_primary" : "withdrawal_non_primary";
@@ -398,8 +398,8 @@ private:
     bool successful; // 송금 성공 여부
 
 public:
-    Transfer(Account* srcAcc, Bank* bnk, unordered_map<string, int>& fees, Account* destAcc, double amt)
-        : Trans(srcAcc, bnk, fees), destinationAccount(destAcc), amount(amt), successful(false) {}
+    Transfer(Account* srcAcc, Bank* bnk, unordered_map<string, int>& fees, Account* destAcc, double amt, string language)
+        : Trans(srcAcc, bnk, fees, language), destinationAccount(destAcc), amount(amt), successful(false) {}
 
     string calculateFees(const string& destBankName) {
         if (account->getBankName() == bank->getName() && destBankName == bank->getName()) {
@@ -444,32 +444,34 @@ private:
     vector<string> transactionHistory;  // 거래 내역. Account의 거래 내역과는 별도로 저장된다. 이건 스냅샷 용.
     string AdminCard = "admin";         // 관리자 카드 번호
     int incorrectPasswordAttempts;
+    string languageSetting;
 
 public:
     ATM() : sessionActive(false), myBank(nullptr), myAccount(nullptr) {}
 
     // ATM 초기화
     void setupATM() {
+        setLanguage();
         while (true) {
-            if(languageSetting == "English") cout << "Enter 6-digit ATM serial number: ";
+            if(getLanguage() == "English") cout << "Enter 6-digit ATM serial number: ";
             else cout << "6자리 ATM 시리얼 번호를 입력하세요: ";
             cin >> serialNumber;
             if (serialNumber.length() == 6 && all_of(serialNumber.begin(), serialNumber.end(), ::isdigit)) {
                 break;
             }
-            if(languageSetting == "English") cout << "Invalid serial number. Please enter exactly 6 numeric digits.\n";
+            if(getLanguage() == "English") cout << "Invalid serial number. Please enter exactly 6 numeric digits.\n";
             else cout << "잘못된 시리얼 번호입니다. 6자리 숫자를 정확히 입력하세요.\n";
         }
 
         while (true) {
-            if(languageSetting == "English") cout << "Select ATM type (1: Single Bank, 2: Multi-Bank): ";
+            if(getLanguage() == "English") cout << "Select ATM type (1: Single Bank, 2: Multi-Bank): ";
             else cout << "ATM 유형을 선택하세요 (1: 단일 은행, 2: 다중 은행): ";
             int atmTypeChoice;
             cin >> atmTypeChoice;
             if (atmTypeChoice == 1 || atmTypeChoice == 2) {
-                if (languageSetting == "English"){
+                if (getLanguage() == "English"){
                     type = (atmTypeChoice == 1) ? "Single Bank" : "Multi-Bank";
-                    if(languageSetting == "English") cout << "ATM Type set to: " << type << endl;
+                    if(getLanguage() == "English") cout << "ATM Type set to: " << type << endl;
                 }
                 else {
                     type = (atmTypeChoice == 1) ? "단일 은행" : "다중 은행";
@@ -477,31 +479,31 @@ public:
                 }
                 break;
             }
-            if(languageSetting == "English") cout << "Invalid selection. Please enter 1 or 2.\n";
+            if(getLanguage() == "English") cout << "Invalid selection. Please enter 1 or 2.\n";
             else cout << "잘못된 선택입니다. 1 또는 2를 입력하세요.\n";
         }
 
         while (true) {
-            if(languageSetting == "English") cout << "Enter primary bank name: ";
+            if(getLanguage() == "English") cout << "Enter primary bank name: ";
             else cout << "기본 은행 이름을 입력하세요: ";
             string bankName;
             cin >> bankName;
             if (!bankName.empty()) {
                 myBank = new Bank(bankName);
-                if(languageSetting == "English") cout << "Primary bank set to: " << bankName << endl;
+                if(getLanguage() == "English") cout << "Primary bank set to: " << bankName << endl;
                 else cout << "기본 은행이 설정되었습니다: " << bankName << endl;
                 break;
             }
-            if(languageSetting == "English") cout << "Bank name cannot be empty. Please enter a valid name.\n";
+            if(getLanguage() == "English") cout << "Bank name cannot be empty. Please enter a valid name.\n";
             else cout << "은행 이름은 비워둘 수 없습니다. 유효한 이름을 입력하세요.\n";
         }
 
-        if(languageSetting == "English") cout << "Enter initial cash for each denomination:" << endl;
+        if(getLanguage() == "English") cout << "Enter initial cash for each denomination:" << endl;
         else cout << "각 지폐 단위의 초기 현금을 입력하세요:" << endl;
         vector<int> denominations = {1000, 5000, 10000, 50000};
         for (int denom : denominations) {
             while (true) {
-                if(languageSetting == "English") cout << denom << " KRW bills: ";
+                if(getLanguage() == "English") cout << denom << " KRW bills: ";
                 else cout << denom << "원 지폐: ";
                 int count;
                 cin >> count;
@@ -509,14 +511,49 @@ public:
                     cashInventory[denom] = count;
                     break;
                 }
-                if(languageSetting == "English") cout << "Invalid input. Please enter a non-negative number.\n";
+                if(getLanguage() == "English") cout << "Invalid input. Please enter a non-negative number.\n";
                 else cout << "잘못된 입력입니다. 음이 아닌 숫자를 입력하세요.\n";
             }
         }
 
         initializeTransactionFees();
-        if(languageSetting == "English") cout << "ATM setup complete.\n";
+        if(getLanguage() == "English") cout << "ATM setup complete.\n";
         else cout << "ATM 설정이 완료되었습니다.\n";
+    }
+    void setLanguage(){
+        while (1) {
+            cout << "Select language setting (1: English, 2: Bilingual): ";
+            int languageChoice;
+            cin >> languageChoice;
+            if (languageChoice == 1){
+                languageSetting = "English";
+                cout << "Language set to English.\n";
+                break;
+            } else if (languageChoice == 2){
+                int BilanguageChoice;
+                cout << "Bilingual support enabled.\n";
+                cout << "Select language (1: English, 2: Korean): ";
+                cin >> BilanguageChoice;
+                if (BilanguageChoice == 1){
+                    languageSetting = "English";
+                    cout << "Language set to Bilingual English.\n";
+                    break;
+                } else if (BilanguageChoice == 2){
+                    languageSetting = "Korean";
+                    cout << "언어가 한국어로 설정되었습니다.\n";
+                    break;
+                } else {
+                    cout << "Invalid selection. Please enter 1 or 2.\n";
+                }
+
+                break;
+            }
+            cout << "Invalid selection. Please enter 1 or 2.\n";
+        }
+    }
+
+    string getLanguage() const {
+        return languageSetting;
     }
 
     void initializeTransactionFees() {
@@ -559,26 +596,26 @@ public:
             if (myBank) {
                 if (!myBank->getAccount(cardNumber)) {
                     // 잘못된 카드 번호
-                    if (languageSetting == "English") cout << "Authentication failed. Invalid card number. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
+                    if (getLanguage() == "English") cout << "Authentication failed. Invalid card number. This ATM only accepts cards from the primary bank (" << myBank->getName() << ").\n";
                     else cout << "인증 실패. 잘못된 카드 번호입니다. 이 ATM은 주 은행 (" << myBank->getName() << ")의 카드만 허용합니다.\n";
                 } else if (!myBank->verifyPassword(cardNumber, password)) {
                     // 잘못된 비밀번호
                     incorrectPasswordAttempts++;
-                    if (languageSetting == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+                    if (getLanguage() == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
                     else cout << "인증 실패. 비밀번호가 틀렸습니다. 남은 시도 횟수: " << (3 - incorrectPasswordAttempts) << endl;
                 } else {
                     // 인증 성공
                     sessionActive = true;
                     myAccount = myBank->getAccount(cardNumber);
                     authenticated = true;
-                    if (languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Single Bank ATM.\n";
+                    if (getLanguage() == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Single Bank ATM.\n";
                     else cout << "ATM 시리얼 번호 " << serialNumber << "에 대한 세션이 시작되었습니다. (단일 은행 ATM)\n";
-                    if (languageSetting == "English") cout << "Hello, " << myAccount->getUserName() << "!\n";
+                    if (getLanguage() == "English") cout << "Hello, " << myAccount->getUserName() << "!\n";
                     else cout << myAccount->getUserName() << "님 안녕하세요!\n";
                     incorrectPasswordAttempts = 0; // 인증 성공 시 시도 횟수 초기화
                 }
             } else {
-                if (languageSetting == "English") cout << "Error: This ATM does not have a valid primary bank configuration.\n";
+                if (getLanguage() == "English") cout << "Error: This ATM does not have a valid primary bank configuration.\n";
                 else cout << "오류: 이 ATM에는 유효한 주 은행 구성이 없습니다.\n";
             }
         } else if (type == "Multi-Bank" || type == "다중 은행") {
@@ -589,7 +626,7 @@ public:
                 } else if (!bank->verifyPassword(cardNumber, password)) {
                     // 잘못된 비밀번호
                     incorrectPasswordAttempts++;
-                    if (languageSetting == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
+                    if (getLanguage() == "English") cout << "Authentication failed. Incorrect password. Attempts remaining: " << (3 - incorrectPasswordAttempts) << endl;
                     else cout << "인증 실패. 비밀번호가 틀렸습니다. 남은 시도 횟수: " << (3 - incorrectPasswordAttempts) << endl;
                     return; // 잘못된 비밀번호면 더 이상 탐색하지 않음
                 } else {
@@ -597,7 +634,7 @@ public:
                     sessionActive = true;
                     myAccount = bank->getAccount(cardNumber);
                     authenticated = true;
-                    if (languageSetting == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Multi-Bank ATM.\n";
+                    if (getLanguage() == "English") cout << "Session started on ATM with serial number " << serialNumber << " for Multi-Bank ATM.\n";
                     else cout << "ATM 시리얼 번호 " << serialNumber << "에 대한 세션이 시작되었습니다. (다중 은행 ATM)\n";
                     incorrectPasswordAttempts = 0; // 인증 성공 시 시도 횟수 초기화
                     break;
@@ -605,11 +642,11 @@ public:
             }
 
             if (!authenticated) {
-                if (languageSetting == "English") cout << "Authentication failed. Invalid card number. Please try again.\n";
+                if (getLanguage() == "English") cout << "Authentication failed. Invalid card number. Please try again.\n";
                 else cout << "인증 실패. 잘못된 카드 번호입니다. 다시 시도하세요.\n";
             }
         } else {
-            if (languageSetting == "English") cout << "Error: Invalid ATM type.\n";
+            if (getLanguage() == "English") cout << "Error: Invalid ATM type.\n";
             else cout << "오류: 잘못된 ATM 유형입니다.\n";
         }
     }
@@ -622,7 +659,7 @@ public:
 
             if (myAccount) {
                 // 계좌 정보 출력
-                if (languageSetting == "English") {
+                if (getLanguage() == "English") {
                     cout << "Card Number: " << myAccount->getCardNumber() << "\n";
                     cout << "Account Number: " << myAccount->getAccountNumber() << "\n";
                     cout << "User Name: " << myAccount->getUserName() << "\n\n";
@@ -636,7 +673,7 @@ public:
 
                 // 세션별 거래 내역 출력
                 if (transactionHistory.empty()) {
-                    if (languageSetting == "English") {
+                    if (getLanguage() == "English") {
                         cout << "No transactions were completed during this session.\n";
                     } else {
                         cout << "세션 동안 완료된 거래가 없습니다.\n";
@@ -648,7 +685,7 @@ public:
                         cout << transaction << "\n";
                     }
 
-                    if (languageSetting == "English") {
+                    if (getLanguage() == "English") {
                         cout << "\nTotal Transactions: " << transactionHistory.size() << "\n";
                     } else {
                         cout << "\n총 거래 수: " << transactionHistory.size() << "\n";
@@ -657,7 +694,7 @@ public:
             }
 
             // 세션 종료 메시지
-            if (languageSetting == "English") {
+            if (getLanguage() == "English") {
                 cout << "\nThank you for using the ATM. Take your card.\n";
             } else {
                 cout << "\nATM을 이용해 주셔서 감사합니다.당신의 카드를 받으세요.\n";
@@ -670,7 +707,7 @@ public:
         
         else {
             // 세션이 활성 상태가 아닌 경우
-            if (languageSetting == "English") {
+            if (getLanguage() == "English") {
                 cout << "No active session to end.\n";
             } else {
                 cout << "종료할 세션이 없습니다.\n";
@@ -688,10 +725,10 @@ public:
         // 거래 성공 시
         if (deposit.isSuccessful()) {
             double amount = denomination * count;
-            if (languageSetting == "English") {
-                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", amount, "deposit");
+            if (getLanguage() == "English") {
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", amount, "deposit", getLanguage());
             } else {
-                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", amount, "입금");
+                myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", amount, "입금", getLanguage());
             }
             // 세션별 거래 기록
             string record = to_string(myAccount->getTransactionID()) + " : " + myAccount->getCardNumber() + " deposit " + to_string(amount) + " won";
@@ -702,7 +739,7 @@ public:
     // 출금 함수
     void withdraw() {
         double amount;
-        if(languageSetting == "English") cout << "Enter amount to withdraw: ";
+        if(getLanguage() == "English") cout << "Enter amount to withdraw: ";
         else cout << "출금할 금액을 입력하세요: ";
         cin >> amount;
 
@@ -714,17 +751,17 @@ public:
             withdrawalCount++;
 
             // 출금 제한 메시지 출력
-            if (languageSetting == "English") {
+            if (getLanguage() == "English") {
                 cout << "You can withdraw " << (3 - withdrawalCount) << " more time(s) during this session." << endl;
             } else {
                 cout << "이 세션에서 " << (3 - withdrawalCount) << "번 더 출금할 수 있습니다." << endl;
             }
 
-            if(languageSetting == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "withdraw", amount, "withdraw");
-            else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금");
+            if(getLanguage() == "English") myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "withdraw", amount, "withdraw", getLanguage());
+            else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금", getLanguage());
 
             // 세션별 거래 기록
-            if(languageSetting == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won");
+            if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won");
             else transactionHistory.push_back("출금: " + to_string(amount) + " 원");
         }
     }
@@ -732,12 +769,12 @@ public:
     // 송금 함수
     void transferFunds(vector<Bank*>& banks) {
         int choice;
-        if(languageSetting == "English") cout << "Choose transfer type: \n1. Account Transfer\n2. Cash Transfer\n";
+        if(getLanguage() == "English") cout << "Choose transfer type: \n1. Account Transfer\n2. Cash Transfer\n";
         else cout << "송금 유형을 선택하세요: \n1. 계좌 이체\n2. 현금 이체\n";
         cin >> choice;
 
         string destAccountNumber;
-        if(languageSetting == "English") cout << "Enter destination account number: ";
+        if(getLanguage() == "English") cout << "Enter destination account number: ";
         else cout << "목적지 계좌 번호를 입력하세요: ";
         cin >> destAccountNumber;
 
@@ -753,14 +790,14 @@ public:
         }
 
         if (!destAccount) {
-            if(languageSetting == "English") cout << "Destination account not found.\n";
+            if(getLanguage() == "English") cout << "Destination account not found.\n";
             else cout << "목적지 계좌를 찾을 수 없습니다.\n";
             return;
         }
 
         if (choice == 1) {
             double amount;
-            if(languageSetting == "English") cout << "Enter transfer amount: ";
+            if(getLanguage() == "English") cout << "Enter transfer amount: ";
             else cout << "송금 금액을 입력하세요: ";
             cin >> amount;
 
@@ -769,20 +806,20 @@ public:
 
             // 거래 성공 시
             if (transfer.isSuccessful()) {
-                if(languageSetting == "English") {
-                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber());
-                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber());
+                if(getLanguage() == "English") {
+                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber(), getLanguage());
+                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber(), getLanguage());
                     transactionHistory.push_back("Account Transfer: " + to_string(amount) + " won to " + destAccountNumber);
                 } else {
-                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber());
-                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber());
+                    myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber(), getLanguage());
+                    destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber(), getLanguage());
                     transactionHistory.push_back("계좌 송금: " + to_string(amount) + " 원 -> " + destAccountNumber);
                 }
             }
         } else if (choice == 2) {
             int amount50000, amount10000, amount5000, amount1000;
             int amount = 0;
-            if(languageSetting == "English"){
+            if(getLanguage() == "English"){
                 cout << "Insert cash and transition fees" << endl;
                 cout << "50000won bills : ";
                 cin >> amount50000;
@@ -809,7 +846,7 @@ public:
 
             // 거래 성공 시
             if (amount > 0) {
-                if(languageSetting == "English") {
+                if(getLanguage() == "English") {
                     cout << "You transferred " << amount << " won to " << destAccountNumber << ". Transfer fee " << transactionFees["cash_transfer"] << " was paid." << endl;
                     transactionHistory.push_back("Cash Transfer: " + to_string(amount) + " won to " + destAccountNumber);
                 } else {
@@ -821,41 +858,41 @@ public:
                 cashInventory[10000] += amount10000;
                 cashInventory[5000] += amount5000;
                 cashInventory[1000] += amount1000;
-                if(languageSetting == "English") destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer");
-                else destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금");
+                if(getLanguage() == "English") destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "transfer", amount, "transfer", getLanguage());
+                else destAccount->recordTransaction(to_string(myAccount->getTransactionID()), destAccount->getCardNumber(), "송금", amount, "송금", getLanguage());
             } else {
-                if(languageSetting == "English") cout << "Error: Insufficient amount after fees for cash transfer.\n";
+                if(getLanguage() == "English") cout << "Error: Insufficient amount after fees for cash transfer.\n";
                 else cout << "오류: 수수료를 제외하고 남은 금액이 부족합니다.\n";
             }
         }
     }
 
     void displaySnapshot(const vector<ATM>& atms, const vector<Bank*>& banks) {
-        if(languageSetting == "English") cout << "\n--- All ATMs Snapshot ---" << endl;
+        if(getLanguage() == "English") cout << "\n--- All ATMs Snapshot ---" << endl;
         else cout << "\n--- 모든 ATM 스냅샷 ---" << endl;
 
         // ATM 정보 출력
         for (const auto& atm : atms) {
-            if(languageSetting == "English") cout << "ATM [SN: " << atm.getSerialNumber() << "] remaining cash: {";
+            if(getLanguage() == "English") cout << "ATM [SN: " << atm.getSerialNumber() << "] remaining cash: {";
             else cout << "ATM [SN: " << atm.getSerialNumber() << "] 남은 현금: {";
             bool first = true;
             for (const auto& pair : atm.getCashInventory()) {
                 if (!first) cout << ", ";
-                if(languageSetting == "English") cout << "KRW " << pair.first << ": " << pair.second;
+                if(getLanguage() == "English") cout << "KRW " << pair.first << ": " << pair.second;
                 else cout << "KRW " << pair.first << ": " << pair.second;
                 first = false;
             }
             cout << "}" << endl;
         }
 
-        if(languageSetting == "English") cout << "\n--- All Accounts Snapshot ---" << endl;
+        if(getLanguage() == "English") cout << "\n--- All Accounts Snapshot ---" << endl;
         else cout << "\n--- 모든 계좌 스냅샷 ---" << endl;
 
         // 계좌 정보 출력
         for (const auto& bank : banks) {
             for (const auto& accountPair : bank->getAllAccounts()) {
                 const Account& account = accountPair.second;
-                if(languageSetting == "English") cout << "Account [Bank: " << bank->getName()
+                if(getLanguage() == "English") cout << "Account [Bank: " << bank->getName()
                                                 << ", No: " << account.getAccountNumber()
                                                 << ", Owner: " << account.getUserName()
                                                 << "] balance: " << account.getBalance() << " KRW" << endl;
@@ -871,17 +908,17 @@ public:
         incorrectPasswordAttempts = 0; // 잘못된 비밀번호 시도 횟수
 
         while (true) {
-            if (languageSetting == "English") cout << "Insert your card (card number): ";
+            if (getLanguage() == "English") cout << "Insert your card (card number): ";
             else cout << "카드를 넣어주세요 (카드 번호): ";
             string cardNumber, password;
             cin >> cardNumber;
 
             if (cardNumber == AdminCard) {
-                if (languageSetting == "English") cout << "Admin mode activated.\n";
+                if (getLanguage() == "English") cout << "Admin mode activated.\n";
                 else cout << "관리자 모드가 활성화되었습니다.\n";
 
                 while (true) {
-                    if (languageSetting == "English") {
+                    if (getLanguage() == "English") {
                         cout << "--- Admin Menu ---\n";
                         cout << "1. Transaction history\n2. Exit\n";
                     } else {
@@ -896,25 +933,25 @@ public:
                             unordered_map<string, Account> accounts = pair->getAllAccounts();
                             for (const auto& pair : accounts) {
                                 Account account = pair.second;
-                                account.printTransactionHistory();
+                                account.printTransactionHistory(getLanguage());
                             }
                         }
                     } else if (adminChoice == 2) {
                         break;
                     } else {
-                        if (languageSetting == "English") cout << "Invalid choice. Try again.\n";
+                        if (getLanguage() == "English") cout << "Invalid choice. Try again.\n";
                         else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
                     }
                 }
             } else {
-                if (languageSetting == "English") cout << "Enter your password: ";
+                if (getLanguage() == "English") cout << "Enter your password: ";
                 else cout << "비밀번호를 입력하세요: ";
                 cin >> password;
 
                 insert_card(cardNumber, password, banks);
 
                 if (incorrectPasswordAttempts >= 3) {
-                    if (languageSetting == "English") cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
+                    if (getLanguage() == "English") cout << "Too many incorrect attempts. Session aborted. Card returned.\n";
                     else cout << "너무 많은 잘못된 시도. 세션이 중단되었습니다. 카드가 반환됩니다.\n";
                     return; // 프로그램 종료
                 }
@@ -922,7 +959,7 @@ public:
                 if (isSessionActive()) {
                     char action;
                     do {
-                        if (languageSetting == "English") {
+                        if (getLanguage() == "English") {
                             cout << "\n--- ATM Menu ---\n";
                             cout << "1. Deposit\n2. Withdrawal\n3. Transfer\n4. Cancel\n/. Display Snapshot\n";
                             cout << "Select an action: ";
@@ -939,7 +976,7 @@ public:
                                 break;
                             case '2':
                                 if (withdrawalCount >= 3) {
-                                    if (languageSetting == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
+                                    if (getLanguage() == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
                                     else cout << "오류: 세션 당 최대 3회의 출금만 허용됩니다. 더 많이 출금하려면 세션을 종료하세요.\n";
                                     end_session();
                                     return;
@@ -958,7 +995,7 @@ public:
                                 displaySnapshot(atms, banks);
                                 break;
                             default:
-                                if (languageSetting == "English") cout << "Invalid choice. Try again.\n";
+                                if (getLanguage() == "English") cout << "Invalid choice. Try again.\n";
                                 else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
                         }
                     } while (action != '4' && isSessionActive());
@@ -969,37 +1006,7 @@ public:
 };
 int ATM::withdrawalCount = 0;
 
-void setLanguage(){
-    while (1) {
-        cout << "Select language setting (1: English, 2: Bilingual): ";
-        int languageChoice;
-        cin >> languageChoice;
-        if (languageChoice == 1){
-            languageSetting = "English";
-            cout << "Language set to English.\n";
-            break;
-        } else if (languageChoice == 2){
-            int BilanguageChoice;
-            cout << "Bilingual support enabled.\n";
-            cout << "Select language (1: English, 2: Korean): ";
-            cin >> BilanguageChoice;
-            if (BilanguageChoice == 1){
-                languageSetting = "English";
-                cout << "Language set to Bilingual English.\n";
-                break;
-            } else if (BilanguageChoice == 2){
-                languageSetting = "Korean";
-                cout << "언어가 한국어로 설정되었습니다.\n";
-                break;
-            } else {
-                cout << "Invalid selection. Please enter 1 or 2.\n";
-            }
 
-            break;
-        }
-        cout << "Invalid selection. Please enter 1 or 2.\n";
-    }
-}
 
 int main() {
     system("chcp 65001"); // UTF-8 인코딩 설정
@@ -1010,37 +1017,28 @@ int main() {
     // 프로그램 시작 메시지
     cout << "Welcome to the Automated Teller Machine (ATM) System!" << endl;
     cout << "This system allows you to setup ATMs, create accounts, and perform various banking transactions.\n" << endl;
-    setLanguage();
     // 1. ATM 생성
-    if(languageSetting == "English") cout << "Step 1: Setup ATMs" << endl;
-    else cout << "단계 1: ATM 설정" << endl;
+    cout << "Step 1: Setup ATMs" << endl;
     while (true) {
         ATM newATM;
         newATM.setupATM();        // ATM 초기화
         banks.push_back(newATM.getBank()); // ATM의 주거래 은행 포인터를 banks에 추가
         atms.push_back(newATM);   // ATM 추가
-        if(languageSetting == "English") cout << "ATM successfully created!\n";
-        else cout << "ATM이 성공적으로 생성되었습니다!\n";
+        cout << "ATM successfully created!\n";
 
-        if(languageSetting == "English") cout << "Do you want to create another ATM? (y/n): ";
-        else cout << "다른 ATM을 생성하시겠습니까? (y/n): ";
+        cout << "Do you want to create another ATM? (y/n): ";
         char choice;
         cin >> choice;
         if (choice == 'n' || choice == 'N') break;
         else if (choice == 'y' || choice == 'Y') continue;
         else{
-            if(languageSetting == "English") cout << "Invalid choice.\n";
-            else cout << "잘못된 선택입니다.\n";
+            cout << "Invalid choice.\n";
             while(1){
-                if(languageSetting == "English") cout << "Do you want to create another ATM? (y/n): ";
-                else cout << "다른 ATM을 생성하시겠습니까? (y/n): ";
+                cout << "Do you want to create another ATM? (y/n): ";
                 cin >> choice;
                 if (choice == 'n' || choice == 'N') break;
                 else if (choice == 'y' || choice == 'Y') break;
-                else{
-                    if(languageSetting == "English") cout << "Invalid choice.\n";
-                    else cout << "잘못된 선택입니다.\n";
-                }
+                else cout << "Invalid choice.\n";
             }
             if (choice == 'n' || choice == 'N') break;
             else if (choice == 'y' || choice == 'Y') continue;
@@ -1048,11 +1046,9 @@ int main() {
     }
 
     // 2. 계좌 개설
-    if(languageSetting == "English") cout << "\nStep 2: Create Bank Accounts" << endl;
-    else cout << "\n단계 2: 은행 계좌 생성" << endl;
+    cout << "\nStep 2: Create Bank Accounts" << endl;
     while (true) {
-        if(languageSetting == "English") cout << "Enter primary bank name: ";
-        else cout << "기본 은행 이름을 입력하세요: ";
+        cout << "Enter primary bank name: ";
         string bankName;
         cin >> bankName;
 
@@ -1068,22 +1064,19 @@ int main() {
             // 새 은행 생성 및 banks 벡터에 추가
             targetBank = new Bank(bankName);
             banks.push_back(targetBank);
-            if(languageSetting == "English") cout << "New bank \"" << bankName << "\" has been created.\n";
-            else cout << "새 은행 \"" << bankName << "\"이(가) 생성되었습니다.\n";
+            cout << "New bank \"" << bankName << "\" has been created.\n";
         }
 
         // 계좌 정보 입력
         string userName, accountNumber, cardNumber, password;
         double initialBalance;
 
-        if(languageSetting == "English") cout << "Enter your name: ";
-        else cout << "이름을 입력하세요: ";
+        cout << "Enter your name: ";
         cin >> userName;
 
         // 계좌 번호 입력 및 중복 검사
         while (true) {
-            if(languageSetting == "English") cout << "Enter 12-digit account number: ";
-            else cout << "12자리 계좌 번호를 입력하세요: ";
+            cout << "Enter 12-digit account number: ";
             cin >> accountNumber;
 
             bool isDuplicate = false;
@@ -1095,12 +1088,10 @@ int main() {
             }
 
             if (accountNumber.length() != 12) {
-                if(languageSetting == "English") cout << "Error: Account number must be exactly 12 numeric digits. Try again.\n";
-                else cout << "오류: 계좌 번호는 정확히 12자리 숫자여야 합니다. 다시 시도하세요.\n";
+                cout << "Error: Account number must be exactly 12 numeric digits. Try again.\n";
             }
             else if (isDuplicate) {
-                if(languageSetting == "English") cout << "Error: This account number already exists. Please try a different one.\n";
-                else cout << "오류: 이 계좌 번호는 이미 존재합니다. 다른 번호를 입력하세요.\n";
+                cout << "Error: This account number already exists. Please try a different one.\n";
             }
             else {
                 break;
@@ -1109,8 +1100,7 @@ int main() {
 
         // 카드 번호 입력 및 중복 검사
         while (true) {
-            if(languageSetting == "English") cout << "Enter the card number: ";
-            else cout << "카드 번호를 입력하세요: ";
+            cout << "Enter the card number: ";
             cin >> cardNumber;
 
             bool isDuplicate = false;
@@ -1122,26 +1112,22 @@ int main() {
             }
             
             if (isDuplicate) {
-                if(languageSetting == "English") cout << "Error: This card number already exists. Please try a different one.\n";
-                else cout << "오류: 이 카드 번호는 이미 존재합니다. 다른 번호를 입력하세요.\n";
+                cout << "Error: This card number already exists. Please try a different one.\n";
             }
             else {
                 break;
             }
         }
 
-        if(languageSetting == "English") cout << "Enter password: ";
-        else cout << "비밀번호를 입력하세요: ";
+        cout << "Enter password: ";
         cin >> password;
 
         // 초기 잔액 입력 및 유효성 검사
         while (true) {
-            if(languageSetting == "English") cout << "Enter initial balance: ";
-            else cout << "초기 잔액을 입력하세요: ";
+            cout << "Enter initial balance: ";
             cin >> initialBalance;
             if (initialBalance < 0) {
-                if(languageSetting == "English") cout << "Error: Initial balance cannot be negative. Try again.\n";
-                else cout << "오류: 초기 잔액은 음수일 수 없습니다. 다시 시도하세요.\n";
+                cout << "Error: Initial balance cannot be negative. Try again.\n";
             } else {
                 break;
             }
@@ -1150,25 +1136,19 @@ int main() {
         // 선택된 은행에 계좌 생성
         targetBank->createAccount(userName, accountNumber, cardNumber, password, initialBalance);
 
-        if(languageSetting == "English") cout << "Do you want to create another account? (y/n): ";
-        else cout << "다른 계좌를 생성하시겠습니까? (y/n): ";
+        cout << "Do you want to create another account? (y/n): ";
         char choice;
         cin >> choice;
         if (choice == 'n' || choice == 'N') break;
         else if (choice == 'y' || choice == 'Y') continue;
         else{
-            if(languageSetting == "English") cout << "Invalid choice.\n";
-            else cout << "잘못된 선택입니다.\n";
+            cout << "Invalid choice.\n";
             while(1){
-                if(languageSetting == "English") cout << "Do you want to create another account? (y/n): ";
-                else cout << "다른 계좌를 생성하시겠습니까? (y/n): ";
+                cout << "Do you want to create another account? (y/n): ";
                 cin >> choice;
                 if (choice == 'n' || choice == 'N') break;
                 else if (choice == 'y' || choice == 'Y') break;
-                else{
-                    if(languageSetting == "English") cout << "Invalid choice.\n";
-                    else cout << "잘못된 선택입니다.\n";
-                }
+                else cout << "Invalid choice.\n";
             }
             if (choice == 'n' || choice == 'N') break;
             else if (choice == 'y' || choice == 'Y') continue;
@@ -1176,38 +1156,27 @@ int main() {
     }
 
     // 초기 세팅 완료 메시지
-    if(languageSetting == "English") {
-        cout << "\n--- Initial Setup Complete! ---\n";
-        cout << "You can now use the ATMs to perform various transactions.\n";
-    }
-    else {
-        cout << "\n--- 초기 설정 완료! ---\n";
-        cout << "이제 ATM을 사용하여 다양한 거래를 수행할 수 있습니다.\n";
-    }
+    cout << "\n--- Initial Setup Complete! ---\n";
+    cout << "You can now use the ATMs to perform various transactions.\n";
 
     // 3. ATM 세션 시작
     while (true) {
-        if(languageSetting == "English") cout << "\nSelect an ATM to start a session:" << endl;
-        else cout << "\n세션을 시작할 ATM을 선택하세요:" << endl;
+        cout << "\nSelect an ATM to start a session:" << endl;
         for (size_t i = 0; i < atms.size(); ++i) {
-            if(languageSetting == "English") cout << i + 1 << ". ATM [Serial Number: " << atms[i].getSerialNumber() << "]\n";
-            else cout << i + 1 << ". ATM [시리얼 번호: " << atms[i].getSerialNumber() << "]\n";
+            cout << i + 1 << ". ATM [Serial Number: " << atms[i].getSerialNumber() << "]\n";
         }
 
-        if(languageSetting == "English") cout << "Enter ATM number (1 to " << atms.size() << ") or 0 to exit: ";
-        else cout << "ATM 번호를 입력하세요 (1에서 " << atms.size() << "까지) 또는 0을 입력하여 종료: ";
+        cout << "Enter ATM number (1 to " << atms.size() << ") or 0 to exit: ";
         int atmChoice;
         cin >> atmChoice; // 잘못된 타입의 입력을 받으면 무한루프 돎.
 
         if (atmChoice == 0) {
-            if(languageSetting == "English") cout << "Exiting the system. Goodbye!\n";
-            else cout << "시스템을 종료합니다. 안녕히 가세요!\n";
+            cout << "Exiting the system. Goodbye!\n";
             break;
         }
 
         if (atmChoice < 1 || atmChoice > atms.size()) {
-            if(languageSetting == "English") cout << "Invalid choice. Try again.\n";
-            else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
+            cout << "Invalid choice. Try again.\n";
             continue;
         }
 
