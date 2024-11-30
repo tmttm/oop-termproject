@@ -811,6 +811,7 @@ public:
                 insert_card(cardNumber, password, banks); // 카드 삽입 및 계좌 인증
 
                 if (isSessionActive()) {
+                    incorrectPasswordAttempts = 0;
                     char action;
                     do {
                         if(languageSetting == "English") {
