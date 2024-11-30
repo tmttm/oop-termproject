@@ -9,6 +9,8 @@
 #include <fstream>
 using namespace std;
 
+ofstream fout;
+fout.open("transaction_history.txt");
 
 // h2
 class Account {
@@ -1008,8 +1010,6 @@ int ATM::withdrawalCount = 0;
 
 int main() {
     system("chcp 65001"); // UTF-8 인코딩 설정
-    ofstream fout;
-    fout.open("transaction_history.txt");
 
     vector<ATM> atms;            // 여러 ATM 객체 저장
     vector<Bank*> banks;         // 여러 은행 객체를 포인터로 저장
