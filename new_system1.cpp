@@ -762,10 +762,10 @@ public:
 
             if (getLanguage() == "English") {
                 myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "deposit", amount, "deposit", getLanguage());
-                transactionHistory.push_back("Deposit: " + deposit.get_RecordTransactionMoney() + " won" + ", Fee: " + deposit.get_fee() + " won");
+                transactionHistory.push_back("Deposit: " + to_string(deposit.get_RecordTransactionMoney()) + " won" + ", Fee: " + to_string(deposit.get_fee()) + " won");
             } else {
                 myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "입금", amount, "입금", getLanguage());
-                transactionHistory.push_back("입금: " + deposit.get_RecordTransactionMoney() + " 원" + ", 수수료: " + deposit.get_fee() + " 원");
+                transactionHistory.push_back("입금: " + to_string(deposit.get_RecordTransactionMoney()) + " 원" + ", 수수료: " + to_string(deposit.get_fee()) + " 원");
             }
         }
     }
@@ -796,8 +796,8 @@ public:
             else myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "출금", amount, "출금", getLanguage());
 
             // 세션별 거래 기록
-            if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won" + ", Fee: " + withdraw.get_fee() + " won");
-            else transactionHistory.push_back("출금: " + to_string(amount) + " 원" + ", 수수료: " + withdraw.get_fee() + " 원");
+            if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won" + ", Fee: " + to_string(withdraw.get_fee()) + " won");
+            else transactionHistory.push_back("출금: " + to_string(amount) + " 원" + ", 수수료: " + to_string(withdraw.get_fee()) + " 원");
         }
     }
 
@@ -850,11 +850,11 @@ public:
                 if(getLanguage() == "English") {
                     myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "transfer", amount, "transfer to", destAccount->getAccountNumber(), getLanguage());
                     destAccount->recordTransaction(to_string(ID), destAccount->getCardNumber(), "transfer", amount, "transfer from", myAccount->getAccountNumber(), getLanguage());
-                    transactionHistory.push_back("Account Transfer: " + to_string(amount) + " won to " + destAccountNumber + ", Fee: " + transfer.get_fee() + " won");
+                    transactionHistory.push_back("Account Transfer: " + to_string(amount) + " won to " + destAccountNumber + ", Fee: " + to_string(transfer.get_fee()) + " won");
                 } else {
                     myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "송금", amount, "송금 에게:", destAccount->getAccountNumber(), getLanguage());
                     destAccount->recordTransaction(to_string(ID), destAccount->getCardNumber(), "송금", amount, "송금 에서:", myAccount->getAccountNumber(), getLanguage());
-                    transactionHistory.push_back("계좌 송금: " + to_string(amount) + " 원 -> " + destAccountNumber + ", 수수료: " + transfer.get_fee() + " 원");
+                    transactionHistory.push_back("계좌 송금: " + to_string(amount) + " 원 -> " + destAccountNumber + ", 수수료: " + to_string(transfer.get_fee()) + " 원");
                 }
             }
         } else if (choice == 2) {
@@ -901,10 +901,10 @@ public:
                 int ID = myAccount->getTransactionID();
                 if(getLanguage() == "English") {
                     cout << "You transferred " << amount << " won to " << destAccountNumber << ". Transfer fee " << transactionFees["cash_transfer"] << " was paid." << endl;
-                    transactionHistory.push_back("Cash Transfer: " + to_string(amount) + " won to " + destAccountNumber + ", Fee: " + transactionFees["cash_transfer"] + " won");
+                    transactionHistory.push_back("Cash Transfer: " + to_string(amount) + " won to " + destAccountNumber + ", Fee: " + to_string(transactionFees["cash_transfer"]) + " won");
                 } else {
                     cout << amount << "원을 " << destAccountNumber << "에게 송금했습니다. 송금 수수료 " << transactionFees["cash_transfer"] << "원이 부과되었습니다." << endl;
-                    transactionHistory.push_back("현금 송금: " + to_string(amount) + " 원 -> " + destAccountNumber + ", 수수료: " + transactionFees["cash_transfer"] + " 원");
+                    transactionHistory.push_back("현금 송금: " + to_string(amount) + " 원 -> " + destAccountNumber + ", 수수료: " + to_string(transactionFees["cash_transfer"]) + " 원");
                 }
                 destAccount->addFunds(amount, getLanguage());
                 cashInventory[50000] += amount50000;
