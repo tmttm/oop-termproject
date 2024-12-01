@@ -11,7 +11,7 @@ using namespace std;
 
 ofstream fout("transaction_history.txt");
 
-// h2
+// ㅎ2
 class Account {
 private:
     string userName; // 계좌 소유자 이름
