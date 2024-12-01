@@ -224,6 +224,8 @@ private:
     int depositLimitCash = 50; // 현금 입금 한도
     double minimumCheckAmount = 100000; // 수표 입금 최소 금액
     bool successful; // 입금 성공 여부
+    double record_transaction_amount;
+    int fee;
 
 public:
     Deposit(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, int denom, int cnt, string language)
@@ -233,6 +235,9 @@ public:
         return (account->getBankName() == bank->getName()) ? "deposit_primary" : "deposit_non_primary";
     }
 
+    double get_RecordTransactionMoney() { return record_transaction_amount; }
+    int get_fee() { return fee; }
+
     void depositCash(int denomination, int count) {
         if (count > depositLimitCash) {
             if(getLanguage() == "English") cout << "Error: Cash deposit limit of " << depositLimitCash << " bills exceeded." << endl;
@@ -241,12 +246,14 @@ public:
         }
 
         double totalAmount = denomination * count;
-        int fee = transactionFees[calculateFees()];
+        fee = transactionFees[calculateFees()];
 
         if (account->getBalance() >= fee) {
             account->addFunds(totalAmount - fee, getLanguage());
             cashInventory[denomination] += count;
             successful = true; // 입금 성공 여부 설정
+            record_transaction_amount = totalAmount;
+
             if(getLanguage() == "English") {
                 cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
                 cout << "Deposit fee of " << fee << " won applied." << endl;
@@ -268,10 +275,12 @@ public:
             return;
         }
 
-        int fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
+        fee = transactionFees["deposit_primary"]; // 수표는 주 은행 수수료만 적용
         if (account->getBalance() >= fee) {
             account->addFunds(amount - fee, getLanguage());
             successful = true; // 입금 성공 여부 설정
+            record_transaction_amount = amount;
+
             if(languageSetting == "English") {
                 cout << "Deposited check of " << amount << " won to the account." << endl;
                 cout << "Deposit fee of " << fee << " won applied." << endl;
@@ -329,6 +338,7 @@ private:
     unordered_map<int, int>& cashInventory; // ATM의 현금 보유량
     double amount; // 출금 요청 금액
     bool successful; // 출금 성공 여부
+    int fee;
 
 public:
     Withdraw(Account* acc, Bank* bnk, unordered_map<string, int>& fees, unordered_map<int, int>& cashInv, double amt, string language)
@@ -338,6 +348,8 @@ public:
         return (account->getBankName() == bank->getName()) ? "withdrawal_primary" : "withdrawal_non_primary";
     }
 
+    int get_fee() { return fee; }
+
     void performTransaction() override {
         if (amount > 500000) { // 최대 출금 한도 검사
             if(languageSetting == "English") cout << "Error: Maximum withdrawal limit is 500,000 KRW.\n";
@@ -345,7 +357,7 @@ public:
             return;
         }
 
-        int fee = transactionFees[calculateFees()]; // 수수료 계산
+        fee = transactionFees[calculateFees()]; // 수수료 계산
         double totalAmount = amount + fee; // 총 출금 금액(수수료 포함)
 
         if (account->getBalance() < totalAmount) { // 잔액 부족 검사
@@ -395,6 +407,7 @@ private:
     Account* destinationAccount; // 송금 대상 계좌
     double amount; // 송금 금액
     bool successful; // 송금 성공 여부
+    int fee;
 
 public:
     Transfer(Account* srcAcc, Bank* bnk, unordered_map<string, int>& fees, Account* destAcc, double amt, string language)
@@ -410,9 +423,11 @@ public:
         }
     }
 
+    int get_fee() { return fee; }
+
     void performTransaction() override {
         string feeType = calculateFees(destinationAccount->getBankName());
-        int fee = transactionFees[feeType]; // 수수료 계산
+        fee = transactionFees[feeType]; // 수수료 계산
 
         if (account->getBalance() < amount + fee) { // 잔액 부족 검사
             if(languageSetting == "English") cout << "Error: Insufficient account balance for transfer.\n";
@@ -726,12 +741,11 @@ public:
             double amount = denomination * count;
             if (getLanguage() == "English") {
                 myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "deposit", amount, "deposit", getLanguage());
+                transactionHistory.push_back("Deposit: " + deposit.get_RecordTransactionMoney() + " won" + ", Fee: " + deposit.get_fee() + " won");
             } else {
                 myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "입금", amount, "입금", getLanguage());
+                transactionHistory.push_back("입금: " + deposit.get_RecordTransactionMoney() + " 원" + ", 수수료: " + deposit.get_fee() + " 원");
             }
-            // 세션별 거래 기록
-            string record = to_string(myAccount->getTransactionID()) + " : " + myAccount->getCardNumber() + " deposit " + to_string(amount) + " won";
-            transactionHistory.push_back(record);
         }
     }
 
@@ -760,8 +774,8 @@ public:
             else myAccount->recordTransaction(to_string(myAccount->getTransactionID()), myAccount->getCardNumber(), "출금", amount, "출금", getLanguage());
 
             // 세션별 거래 기록
-            if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won");
-            else transactionHistory.push_back("출금: " + to_string(amount) + " 원");
+            if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won" + ", Fee: " + withdraw.get_fee() + " won");
+            else transactionHistory.push_back("출금: " + to_string(amount) + " 원" + ", 수수료: " + withdraw.get_fee() + " 원");
         }
     }
 
