@@ -246,8 +246,8 @@ public:
 
         double totalAmount = denomination * count;
         fee = transactionFees[calculateFees()];
-        int amount50000, amount10000, amount5000, amount1000;
-        while(1){
+        int amount50000=0, amount10000=0, amount5000=0, amount1000=0;
+        while(fee > 0){
             if(getLanguage() == "English") cout << "Enter deposit fee: " << fee << " won." << endl;
             else cout << "입금 수수료 " << fee << "원을 입력하세요." << endl;
             if(getLanguage() == "English") cout << "Enter the number of 50000 won bills: ";
