@@ -98,7 +98,6 @@ public:
             cout << transaction << endl;
             fout << transaction << endl;
         }
-        fout.close();
     }
 };
 int Account::transactionID = 1;
