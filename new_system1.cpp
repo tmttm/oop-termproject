@@ -246,24 +246,46 @@ public:
 
         double totalAmount = denomination * count;
         fee = transactionFees[calculateFees()];
-
-        if (account->getBalance() >= fee) {
-            account->addFunds(totalAmount - fee, getLanguage());
-            cashInventory[denomination] += count;
-            successful = true; // 입금 성공 여부 설정
-            record_transaction_amount = totalAmount;
-
-            if(getLanguage() == "English") {
-                cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
-                cout << "Deposit fee of " << fee << " won applied." << endl;
-            }
+        int amount50000, amount10000, amount5000, amount1000;
+        while(1){
+            if(getLanguage() == "English") cout << "Enter deposit fee: " << fee << " won." << endl;
+            else cout << "입금 수수료 " << fee << "원을 입력하세요." << endl;
+            if(getLanguage() == "English") cout << "Enter the number of 50000 won bills: ";
+            else cout << "50000원 지폐 수량을 입력하세요: ";
+            cin >> amount50000;
+            if(getLanguage() == "English") cout << "Enter the number of 10000 won bills: ";
+            else cout << "10000원 지폐 수량을 입력하세요: ";
+            cin >> amount10000;
+            if(getLanguage() == "English") cout << "Enter the number of 5000 won bills: ";
+            else cout << "5000원 지폐 수량을 입력하세요: ";
+            cin >> amount5000;
+            if(getLanguage() == "English") cout << "Enter the number of 1000 won bills: ";
+            else cout << "1000원 지폐 수량을 입력하세요: ";
+            cin >> amount1000;
+            int fee_input = amount50000 * 50000 + amount10000 * 10000 + amount5000 * 5000 + amount1000 * 1000;
+            if (fee_input == fee) break;
             else {
-                cout << totalAmount << "원 입금 (" << denomination << "원 지폐 " << count << "장)." << endl;
-                cout << "입금 수수료 " << fee << "원이 적용되었습니다." << endl;
+                if(getLanguage() == "English") cout << "Invalid fee amount. Please enter the correct fee amount.\n";
+                else cout << "잘못된 수수료 금액입니다. 올바른 수수료 금액을 입력하세요.\n";
             }
-        } else {
-            if(getLanguage() == "English") cout << "Insufficient funds for deposit fee." << endl;
-            else cout << "입금 수수료를 지불할 잔액이 부족합니다." << endl;
+        }
+
+        account->addFunds(totalAmount, getLanguage());
+        cashInventory[denomination] += count;
+        cashInventory[50000] += amount50000;
+        cashInventory[10000] += amount10000;
+        cashInventory[5000] += amount5000;
+        cashInventory[1000] += amount1000;
+        successful = true; // 입금 성공 여부 설정
+        record_transaction_amount = totalAmount;
+
+        if(getLanguage() == "English") {
+            cout << "Deposited " << totalAmount << " won (" << count << " bills of " << denomination << " won)." << endl;
+            cout << "Deposit fee of " << fee << " won applied." << endl;
+        }
+        else {
+            cout << totalAmount << "원 입금 (" << denomination << "원 지폐 " << count << "장)." << endl;
+            cout << "입금 수수료 " << fee << "원이 적용되었습니다." << endl;
         }
     }
 
