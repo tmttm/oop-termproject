@@ -388,9 +388,14 @@ public:
             }
         }
 
-        if (remainingAmount > 0) { // ATM 잔액 부족 확인
+        if (remainingAmount >= 1000) { // ATM 잔액 부족 확인
             if(languageSetting == "English") cout << "Error: ATM has insufficient cash to complete the withdrawal.\n";
             else cout << "ATM에 출금에 필요한 현금이 부족합니다.\n";
+            return;
+        }
+        else if (remainingAmount > 0) {
+            if(languageSetting == "English") cout << "Error: Only banknotes can be dispensed by the ATM.\n";
+            else cout << "ATM에는 지폐만 넣을 수 있습니다.\n";
             return;
         }
 
@@ -768,6 +773,7 @@ public:
                 transactionHistory.push_back("입금: " + to_string(deposit.get_RecordTransactionMoney()) + " 원" + ", 수수료: " + to_string(deposit.get_fee()) + " 원");
             }
         }
+        else end_session();
     }
 
     // 출금 함수
@@ -799,6 +805,7 @@ public:
             if(getLanguage() == "English") transactionHistory.push_back("Withdraw: " + to_string(amount) + " won" + ", Fee: " + to_string(withdraw.get_fee()) + " won");
             else transactionHistory.push_back("출금: " + to_string(amount) + " 원" + ", 수수료: " + to_string(withdraw.get_fee()) + " 원");
         }
+        else end_session();
     }
 
     // 송금 함수
@@ -857,7 +864,10 @@ public:
                     transactionHistory.push_back("계좌 송금: " + to_string(amount) + " 원 -> " + destAccountNumber + ", 수수료: " + to_string(transfer.get_fee()) + " 원");
                 }
             }
-        } else if (choice == 2) {
+            else end_session();
+        }
+        
+        else if (choice == 2) {
             int amount50000, amount10000, amount5000, amount1000;
             int amount = 0;
             if(getLanguage() == "English"){
@@ -888,14 +898,17 @@ public:
             if (amount50000 < 0 || amount10000 < 0 || amount5000 < 0 || amount1000 < 0) {
                 if(getLanguage() == "English") cout << "Invalid input. Bills cannot be negative.\n";
                 else cout << "잘못된 입력입니다. 지폐 수량은 음수일 수 없습니다.\n";
+                end_session();
             }
             else if (amount50000+amount10000+amount5000+amount1000 == 0) {
                 if(getLanguage() == "English") cout << "Error: No cash inserted.\n";
                 else cout << "오류: 현금이 넣어지지 않았습니다.\n";
+                end_session();
             }
             else if (amount50000+amount10000+amount5000+amount1000 > 50) {
                 if(getLanguage() == "English") cout << "Error: Maximum 50 bills can be inserted.\n";
                 else cout << "오류: 최대 50장까지 넣을 수 있습니다.\n";
+                end_session();
             }
             else if (amount > 0) {
                 int ID = myAccount->getTransactionID();
@@ -913,9 +926,11 @@ public:
                 cashInventory[1000] += amount1000;
                 if(getLanguage() == "English") destAccount->recordTransaction(to_string(ID), destAccount->getCardNumber(), "transfer", amount, "transfer", getLanguage());
                 else destAccount->recordTransaction(to_string(ID), destAccount->getCardNumber(), "송금", amount, "송금", getLanguage());
-            } else {
+            }
+            else {
                 if(getLanguage() == "English") cout << "Error: Insufficient amount after fees for cash transfer.\n";
                 else cout << "오류: 수수료를 제외하고 남은 금액이 부족합니다.\n";
+                end_session();
             }
         }
     }
@@ -1033,7 +1048,6 @@ public:
                                     if (getLanguage() == "English") cout << "Error: Maximum of 3 withdrawals allowed per session. End the session to withdraw more.\n";
                                     else cout << "오류: 세션 당 최대 3회의 출금만 허용됩니다. 더 많이 출금하려면 세션을 종료하세요.\n";
                                     end_session();
-                                    return;
                                 } else {
                                     withdraw();
                                 }
@@ -1043,7 +1057,6 @@ public:
                                 break;
                             case '4':
                                 end_session();
-                                return;
                                 break;
                             case '/':
                                 displaySnapshot(atms, banks);
@@ -1052,7 +1065,8 @@ public:
                                 if (getLanguage() == "English") cout << "Invalid choice. Try again.\n";
                                 else cout << "잘못된 선택입니다. 다시 시도하세요.\n";
                         }
-                    } while (action != '4' && isSessionActive());
+                    } while (isSessionActive());
+                    return;
                 }
             }
         }
