@@ -551,27 +551,28 @@ public:
     void setLanguage(){
         while (1) {
             cout << "Select language setting (1: English, 2: Bilingual): ";
-            int languageChoice;
+            string languageChoice;
             cin >> languageChoice;
-            if (languageChoice == 1){
+            if (languageChoice == "1"){
                 languageSetting = "English";
                 cout << "Language set to English.\n";
                 break;
-            } else if (languageChoice == 2){
-                int BilanguageChoice;
+            } else if (languageChoice == "2"){
+                string BilanguageChoice;
                 cout << "Bilingual support enabled.\n";
                 cout << "Select language (1: English, 2: Korean): ";
                 cin >> BilanguageChoice;
-                if (BilanguageChoice == 1){
+                if (BilanguageChoice == "1"){
                     languageSetting = "English";
                     cout << "Language set to Bilingual English.\n";
                     break;
-                } else if (BilanguageChoice == 2){
+                } else if (BilanguageChoice == "2"){
                     languageSetting = "Korean";
                     cout << "언어가 한국어로 설정되었습니다.\n";
                     break;
                 } else {
                     cout << "Invalid selection. Please enter 1 or 2.\n";
+                    continue;
                 }
 
                 break;
@@ -766,10 +767,10 @@ public:
             int ID = myAccount->getTransactionID();
 
             if (getLanguage() == "English") {
-                myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "deposit", amount, "deposit", getLanguage());
+                myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "deposit", deposit.get_RecordTransactionMoney(), "deposit", getLanguage());
                 transactionHistory.push_back("Deposit: " + to_string(deposit.get_RecordTransactionMoney()) + " won" + ", Fee: " + to_string(deposit.get_fee()) + " won");
             } else {
-                myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "입금", amount, "입금", getLanguage());
+                myAccount->recordTransaction(to_string(ID), myAccount->getCardNumber(), "입금", deposit.get_RecordTransactionMoney(), "입금", getLanguage());
                 transactionHistory.push_back("입금: " + to_string(deposit.get_RecordTransactionMoney()) + " 원" + ", 수수료: " + to_string(deposit.get_fee()) + " 원");
             }
         }
